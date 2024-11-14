@@ -20,27 +20,60 @@ jobs:
       id-token: write
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DOKKU_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H typester.dev >> ~/.ssh/known_hosts
+
+      - name: Check for Rust code changes
+        run: |
+          if git diff --quiet HEAD^ HEAD -- src/**/*.rs Cargo*; then
+            echo "code_changed=false" >> $GITHUB_ENV
+          else
+            echo "code_changed=true" >> $GITHUB_ENV
+          fi
+      - name: Check for entries changes
+        run: |
+          if git diff --quiet HEAD^ HEAD -- entries-json/**/*.json; then
+            echo "entries_changed=false" >> $GITHUB_ENV
+          else
+            echo "entries_changed=true" >> $GITHUB_ENV
+          fi
+
+      - name: Deploy entries
+        if: env.entries_changed == 'true'
+        run: |
+          rsync -av --delete ./entries-json/ root@typester.dev:entries/
+
       - name: Set up QEMU
+        if: env.code_changed == 'true'
         uses: docker/setup-qemu-action@v3
         with:
           platforms: amd64
       - name: Set up Docker Buildx
+        if: env.code_changed == 'true'
         uses: docker/setup-buildx-action@v3
-      - name: Checkout
-        uses: actions/checkout@v4
       - name: Log in to the Container registry
+        if: env.code_changed == 'true'
         uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Extract metadata (tags, labels) for Docker
+        if: env.code_changed == 'true'
         id: meta
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Build and push Docker image
+        if: env.code_changed == 'true'
         id: push
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
         with:
@@ -49,3 +82,13 @@ jobs:
           platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Deploy image to production
+        if: env.code_changed == 'true'
+        run: |
+          ssh dokku@typester.dev git:from-image typester.dev ghcr.io/typester/typester.dev:main
+
+      - name: Restart production server to reflect entries update
+        if: env.code_changed == 'false' && env.entries_changed == 'true'
+        run: |
+          ssh dokku@typester.edv ps:restart typester.dev
