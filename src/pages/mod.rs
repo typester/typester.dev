@@ -37,6 +37,7 @@ pub fn render(
                 title { (title) }
                 link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Outfit";
                 link rel="stylesheet" href="/css/main.css";
+                link rel="alternate" type="application/rss+xml" href="/rss" title="RSS Feed";
                 meta property="og:site_name" content="typester.dev";
                 meta property="og:title" content=(page_title);
                 @if let Some(entry) = entry {
@@ -55,6 +56,8 @@ pub fn render(
                     (content);
                     (footer());
                 }
+
+                script src="https://umami.typester.dev/script.js" data-website-id="649e0ea6-cd59-453a-8ef3-7f104699aedb" {}
             }
         }
     }
