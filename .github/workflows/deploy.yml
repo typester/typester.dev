@@ -41,34 +41,34 @@ jobs:
           ssh-keyscan -H typester.dev >> ~/.ssh/known_hosts
 
       - name: Deploy entries
-        if: steps.changes.output.entries == 'true'
+        if: steps.changes.outputs.entries == 'true'
         run: |
           rsync -av --delete ./entries-json/ root@typester.dev:entries/
 
       - name: Set up QEMU
-        if: steps.changes.output.code == 'true'
+        if: steps.changes.outputs.code == 'true'
         uses: docker/setup-qemu-action@v3
         with:
           platforms: amd64
       - name: Set up Docker Buildx
-        if: steps.changes.output.code == 'true'
+        if: steps.changes.outputs.code == 'true'
         uses: docker/setup-buildx-action@v3
       - name: Log in to the Container registry
-        if: steps.changes.output.code == 'true'
+        if: steps.changes.outputs.code == 'true'
         uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Extract metadata (tags, labels) for Docker
-        if: steps.changes.output.code == 'true'
+        if: steps.changes.outputs.code == 'true'
         id: meta
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Build and push Docker image
-        if: steps.changes.output.code == 'true'
+        if: steps.changes.outputs.code == 'true'
         id: push
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
         with:
@@ -79,11 +79,11 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Deploy image to production
-        if: steps.changes.output.code == 'true'
+        if: steps.changes.outputs.code == 'true'
         run: |
           ssh dokku@typester.dev git:from-image typester.dev ghcr.io/typester/typester.dev:main
 
       - name: Restart production server to reflect entries update
-        if: steps.changes.output.code != 'true' && steps.changes.output.entries == 'true'
+        if: steps.changes.outputs.code != 'true' && steps.changes.outputs.entries == 'true'
         run: |
           ssh dokku@typester.edv ps:restart typester.dev
