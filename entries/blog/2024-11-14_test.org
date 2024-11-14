@@ -1,9 +1,0 @@
-#+TITLE: test entry
-#+DATE: <2024-11-14 Thu 12:28>
-#+TZ: -0800 (PST)
-#+TAGS: test
-#+EID: 8b18af3c-95bf-4326-9273-1010c6785b65
-
-just testing of deployment workflow
-
-hello

@@ -86,4 +86,4 @@ jobs:
       - name: Restart production server to reflect entries update
         if: steps.changes.outputs.code != 'true' && steps.changes.outputs.entries == 'true'
         run: |
-          ssh dokku@typester.edv ps:restart typester.dev
+          ssh dokku@typester.dev ps:restart typester.dev
