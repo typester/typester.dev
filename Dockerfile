@@ -14,7 +14,11 @@ ENV TZ=America/Los_Angeles
 
 # Copy application binary from builder image
 COPY --from=builder /home/rust/src/target/*/release/blog .
+# Copy static files
+COPY ./public /app/public
 
 ENV RUST_LOG=info
+
+EXPOSE 3000
 
 CMD ["/app/blog"]
