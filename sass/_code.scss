@@ -1,8 +1,9 @@
 @mixin codecolor() {
     pre {
+        background-color: #232728;
+
         code {
             color: #d2d2d2;
-            background-color: #232728;
         }
 
         .css-property {

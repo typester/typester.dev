@@ -65,7 +65,7 @@ I built a simple web server in Rust.
 
 The program is very straightforward.
 
-For the template library, I used maud. This was my first time using it, but I found it quite nice. It allows you to write HTML as a DSL, and its well-thought-out design means there isn’t much to memorize. I got comfortable with it quickly.
+For the template library, I used [[https://maud.lambda.xyz/][maud]]. This was my first time using it, but I found it quite nice. It allows you to write HTML as a DSL, and its well-thought-out design means there isn’t much to memorize. I got comfortable with it quickly.
 
 One issue I encountered was that, when writing templates in Rust code, I had to rebuild the project every time I changed the HTML. This was especially frustrating during design adjustments, where you frequently edit and preview changes. The build process became quite a bottleneck.
 
@@ -74,6 +74,8 @@ This issue is compounded by the fact that class-based CSS frameworks like Tailwi
 This made it incompatible with maud, so I initially started building the site with Tailwind but abandoned it because the rebuild times were unbearable.
 
 In the end, I went with the classic approach: generate simple HTML and style it using external CSS. While writing raw CSS is painful, I used Sass to make the process easier. Surprisingly, Sass and maud had great synergy, which worked out really well.
+
+The source code of this site is available at: https://github.com/typester/typester.dev
 
 * Future Updates
 

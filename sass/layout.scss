@@ -147,14 +147,18 @@ main#blog {
     @include codecolor;
 
     pre {
-        width: 100%;
+        border-radius: 8px;
+        overflow: auto;
+
+        @media (max-width: 768px) {
+            margin: 8px;
+        }
 
         > code {
             font-size: 1.1rem;
             display: block;
-            padding: 20px;
-            border-radius: 8px;
-            overflow: auto;
+            flex-shrink: 1;
+            margin: 10px;
         }
     }
 
@@ -232,11 +236,11 @@ main#blog {
     }
 
     article.permalink {
-        width: 768px;
+        max-width: 100%;
         margin-bottom: 64px;
         @media (max-width: 768px) {
             width: 100%;
-            padding: 8px;
+            padding: 16px;
         }
 
         h1 {

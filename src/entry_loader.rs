@@ -71,7 +71,7 @@ impl EntryLoader {
     }
 
     pub fn get_entry_for_path(&self, path: &str) -> Option<Arc<Entry>> {
-        tracing::debug!(%path, map = ?self.permalinks, "get_entry_for_path");
+        tracing::trace!(%path, map = ?self.permalinks, "get_entry_for_path");
         self.permalinks.get(path).cloned()
     }
 
@@ -81,7 +81,7 @@ impl EntryLoader {
     }
 
     pub fn get_entries_by_year(&self) -> BTreeMap<i32, Vec<Arc<Entry>>> {
-        tracing::debug!("get_entries_by_year");
+        tracing::trace!("get_entries_by_year");
         let map = BY_YEAR_CACHE.get_or_init(|| {
             let mut map: BTreeMap<i32, Vec<Arc<Entry>>> = BTreeMap::new();
             for entry in self.entries.iter() {
@@ -142,7 +142,7 @@ fn load_entries<P: AsRef<Path> + Debug>(dir: P) -> anyhow::Result<Vec<Entry>> {
 mod tests {
     use regex::Regex;
 
-    use super::{Entry, EntryLoader};
+    use super::Entry;
 
     #[test]
     fn test_deserialize() {
