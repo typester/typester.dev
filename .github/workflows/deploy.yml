@@ -81,7 +81,7 @@ jobs:
       - name: Deploy image to production
         if: steps.changes.outputs.code == 'true'
         run: |
-          ssh dokku@typester.dev git:from-image typester.dev ghcr.io/typester/typester.dev:main
+          ssh dokku@typester.dev git:from-image typester.dev ghcr.io/typester/typester.dev@${{ steps.push.outputs.digest }}
 
       - name: Restart production server to reflect entries update
         if: steps.changes.outputs.code != 'true' && steps.changes.outputs.entries == 'true'

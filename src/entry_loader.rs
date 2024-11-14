@@ -29,7 +29,6 @@ impl Entry {
 
 #[derive(Debug)]
 pub struct EntryLoader {
-    #[allow(unused)]
     prefix: String,
     entries: Vec<Arc<Entry>>,
     permalinks: HashMap<String, Arc<Entry>>,
