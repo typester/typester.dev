@@ -1,0 +1,86 @@
+#+TITLE: Hello World
+#+DATE: <2024-11-01 Fri 21:30>
+#+TZ: -0800 (PST)
+#+TAGS: web rust personal
+#+EID: 01ea3041-2ec5-4cdc-886a-f09e01e8107c
+
+I was recently laid off and am currently in the middle of an intense job search. However, I was struggling because I didn’t have a personal website in English to showcase my portfolio.
+
+Since I had always wanted to create one, I took this as a good opportunity and built this site.
+
+[[https://unknownplace.org/][My Japanese website]] uses Next.js to generate static HTML, but for this site, I decided to dynamically generate content. This is because I have future plans to experiment with ActivityPub support.
+
+Here’s an overview of the structure of this website.
+
+* Generating entries
+
+I enjoy writing in Emacs’ org-mode, so most of the content on my personal site is generated from org-mode files. While org-mode supports exporting to HTML by default, the generated HTML doesn’t match my preferences. So, I created an org-mode extension called =ox-simple-html.el= to generate clean, simple HTML, and I use it to convert org files into HTML.
+
+Additionally, to make the content easier to work with programmatically, such as including metadata like post dates and tags, I also created =ox-html-json.el=, which exports content in JSON format. Internally, this extension utilizes ox-simple-html.el that I mentioned above.
+
+These two extentions are available on my github: https://github.com/typester/ox-blosxom
+
+And here’s an example of my Emacs configuration:
+
+#+begin_src lisp
+  (setq org-capture-templates
+        `(
+          ;; (...snip)
+          ("t" "typester.dev" plain (file (lambda ()
+                                    (let* ((slug (read-string "slug: "))
+                                           (dir (concat "~/dev/src/github.com/typester/typester.dev/entries/blog")))
+                                      (require 'org-id)
+                                      (make-directory dir t)
+                                      (concat dir "/" (format-time-string "%Y-%m-%d_") slug ".org"))))
+           "#+TITLE: %?\n#+DATE: %T\n#+TZ: %(format-time-string \"%z (%Z)\")\n#+TAGS: draft\n#+EID: %(org-id-uuid)\n\n")
+          ;; (snip...)
+          ))
+
+  (setq org-publish-project-alist
+        '(
+          ;; (...snip)
+          ("typester.dev"
+           :base-directory "~/dev/src/github.com/typester/typester.dev/entries"
+           :base-extension "org"
+           :publishing-directory "~/dev/src/github.com/typester/typester.dev/entries-json"
+           :recursive t
+           :publishing-function org-html-json-publish-to-json)
+          ;; (snip...)
+          ))
+#+end_src
+
+This configuration consists of two parts:
+
+1. *org-capture-template configuration*: This allows for quickly creating blog entries.
+2. *org-publish-project configuration*: This sets up the project for exporting org-mode content to other formats. Here, the custom exporters mentioned earlier are specified.
+
+You can also check out my whole Emacs configuration [[https://github.com/typester/emacs-config][here]]. Feel free to take a look if you’re interested!
+
+* Server-Side Implementation
+
+I built a simple web server in Rust.
+
+- It loads all the entry JSON files into memory at startup.
+- Then, based on incoming requests, it injects the entries into templates and outputs HTML.
+
+The program is very straightforward.
+
+For the template library, I used maud. This was my first time using it, but I found it quite nice. It allows you to write HTML as a DSL, and its well-thought-out design means there isn’t much to memorize. I got comfortable with it quickly.
+
+One issue I encountered was that, when writing templates in Rust code, I had to rebuild the project every time I changed the HTML. This was especially frustrating during design adjustments, where you frequently edit and preview changes. The build process became quite a bottleneck.
+
+This issue is compounded by the fact that class-based CSS frameworks like Tailwind are mainstream these days, and modifying styles often requires changes to the HTML itself.
+
+This made it incompatible with maud, so I initially started building the site with Tailwind but abandoned it because the rebuild times were unbearable.
+
+In the end, I went with the classic approach: generate simple HTML and style it using external CSS. While writing raw CSS is painful, I used Sass to make the process easier. Surprisingly, Sass and maud had great synergy, which worked out really well.
+
+* Future Updates
+
+Even though this site was built to showcase my portfolio, it currently only has a blog, so adding portfolio content is a high priority.
+
+Lately, I’ve been enjoying developing mobile apps where the core code is written in Rust. I’d like to write articles about this development style, as I think it’s amazing.
+
+Also, as I briefly mentioned earlier, I’d like to add features like update notifications and comments using ActivityPub. However, since this would take significant time to implement, I probably won’t get to it for a while.
+
+That’s all for now! Thanks for reading.
