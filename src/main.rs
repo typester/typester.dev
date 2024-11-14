@@ -1,5 +1,15 @@
-use axum::{handler::HandlerWithoutStateExt, routing::get, Router};
+use std::sync::Arc;
+
+use axum::{
+    extract::State,
+    handler::HandlerWithoutStateExt,
+    http::{Response, StatusCode},
+    response::IntoResponse,
+    routing::get,
+    Router,
+};
 use entry_loader::EntryLoader;
+use rss::{Channel, ChannelBuilder, ItemBuilder};
 use tower_http::services::ServeDir;
 use tracing_subscriber::EnvFilter;
 
@@ -21,6 +31,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/blog", get(pages::blog::index))
         .route("/blog/tags/:tag", get(pages::blog::tag_index))
         .route("/blog/*path", get(pages::blog::permalink))
+        .route("/rss", get(rss))
         .with_state(blog_entries)
         .fallback_service(
             ServeDir::new("public").not_found_service(pages::not_found.into_service()),
@@ -41,5 +52,42 @@ fn init_logger() {
         log.json().init();
     } else {
         log.compact().init();
+    }
+}
+
+async fn rss(State(loader): State<Arc<EntryLoader>>) -> (StatusCode, RssChannel) {
+    let entries = loader.get_entries();
+
+    let mut channel = ChannelBuilder::default()
+        .title("typester.dev")
+        .link("https://typester.dev")
+        .description("Random thoughts from Daisuke Murase")
+        .pub_date(entries[0].date.to_rfc2822())
+        .build();
+
+    let mut items = vec![];
+    for entry in entries.iter() {
+        let item = ItemBuilder::default()
+            .title(entry.title.clone())
+            .link(format!("https://typester.dev/blog{}", entry.permalink()))
+            .pub_date(entry.date.to_rfc2822())
+            .content(entry.content.clone())
+            .build();
+        items.push(item);
+    }
+    channel.set_items(items);
+
+    (StatusCode::OK, RssChannel(channel))
+}
+
+struct RssChannel(Channel);
+
+impl IntoResponse for RssChannel {
+    fn into_response(self) -> axum::response::Response {
+        Response::builder()
+            .status(StatusCode::OK)
+            .header("Content-Type", "application/rss+xml; charset=utf-8")
+            .body(self.0.to_string().into())
+            .unwrap()
     }
 }

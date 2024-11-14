@@ -75,6 +75,10 @@ impl EntryLoader {
         self.permalinks.get(path).cloned()
     }
 
+    pub fn get_entries(&self) -> Vec<Arc<Entry>> {
+        self.entries.clone()
+    }
+
     pub fn get_entries_by_tag(&self, tag: &str) -> Option<Vec<Arc<Entry>>> {
         let entries = self.tags.get(tag).map(|t| t.clone());
         entries
