@@ -9,7 +9,7 @@ use axum::{
     Router,
 };
 use entry_loader::EntryLoader;
-use rss::{Channel, ChannelBuilder, ItemBuilder};
+use rss::{Channel, ChannelBuilder, Guid, ItemBuilder};
 use tower_http::services::ServeDir;
 use tracing_subscriber::EnvFilter;
 
@@ -83,6 +83,10 @@ async fn rss(State(loader): State<Arc<EntryLoaders>>) -> (StatusCode, RssChannel
             .link(format!("https://typester.dev/blog{}", entry.permalink()))
             .pub_date(entry.date.to_rfc2822())
             .content(entry.content.clone())
+            .guid(Guid {
+                value: entry.eid.clone(),
+                permalink: false,
+            })
             .build();
         items.push(item);
     }
