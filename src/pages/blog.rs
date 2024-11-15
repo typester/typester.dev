@@ -8,7 +8,8 @@ use maud::{html, Markup, PreEscaped};
 
 use crate::{
     entry_loader::Entry,
-    pages::{self, render, Nav}, EntryLoaders,
+    pages::{self, render, Nav},
+    EntryLoaders,
 };
 
 pub async fn index(State(loader): State<Arc<EntryLoaders>>) -> Markup {
@@ -87,7 +88,10 @@ pub async fn permalink(
     Path(path): Path<String>,
 ) -> (StatusCode, Markup) {
     tracing::debug!(%path, "get permalink");
-    let Some(entry) = loader.blog_loader.get_entry_for_path(&format!("/blog/{}", path)) else {
+    let Some(entry) = loader
+        .blog_loader
+        .get_entry_for_path(&format!("/blog/{}", path))
+    else {
         return pages::not_found().await;
     };
 

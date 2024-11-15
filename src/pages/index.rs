@@ -7,9 +7,7 @@ use crate::EntryLoaders;
 
 use super::{render, Nav};
 
-pub async fn index(
-    State(loader): State<Arc<EntryLoaders>>,
-) -> Markup {
+pub async fn index(State(loader): State<Arc<EntryLoaders>>) -> Markup {
     let profile = loader.top_loader.get_entry_for_slug("profile");
     let notice = loader.top_loader.get_entry_for_slug("notice");
 
