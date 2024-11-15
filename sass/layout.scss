@@ -137,6 +137,25 @@ main#index {
             }
         }
     }
+
+    #notice {
+        color: var(--color-on-tertiary-container);
+        background-color: var(--color-tertiary-container);
+        margin-top: 24px;
+        padding: 8px 32px;
+        border-radius: 8px;
+        width: 768px;
+
+        @media (max-width: 768px) {
+            width: 95%;
+            padding: 8px;
+        }
+
+        a {
+            border: none;
+            box-shadow: none;
+        }
+    }
 }
 
 main#blog {

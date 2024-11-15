@@ -30,6 +30,7 @@ jobs:
             code:
               - 'src/**'
               - 'Cargo.*'
+              - 'public/**'
             entries:
               - 'entries-json/**/*.json'
 

@@ -1,8 +1,18 @@
-use maud::{html, Markup};
+use std::sync::Arc;
+
+use axum::extract::State;
+use maud::{html, Markup, PreEscaped};
+
+use crate::EntryLoaders;
 
 use super::{render, Nav};
 
-pub async fn index() -> Markup {
+pub async fn index(
+    State(loader): State<Arc<EntryLoaders>>,
+) -> Markup {
+    let profile = loader.top_loader.get_entry_for_slug("profile");
+    let notice = loader.top_loader.get_entry_for_slug("notice");
+
     render(
         None,
         Nav::Home,
@@ -22,17 +32,15 @@ pub async fn index() -> Markup {
                     }
                 }
 
-                section #profile {
-                    ul {
-                        li {
-                            "Software Engineer with extensive experience across various languages and fields, specializes in building robust, scalable, and high-performance network applications."
-                        }
-                        li {
-                            "Also known as " strong { "typester" } " on the internet."
-                        }
-                        li {
-                            "Loves " strong { "Rust" } ", Long-time " strong { "Emacs" } " user."
-                        }
+                @if let Some(notice) = notice {
+                    section #notice {
+                        (PreEscaped(notice.content.clone()))
+                    }
+                }
+
+                @if let Some(profile) = profile {
+                    section #profile {
+                        (PreEscaped(profile.content.clone()))
                     }
                 }
             }

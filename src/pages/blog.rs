@@ -7,12 +7,12 @@ use axum::{
 use maud::{html, Markup, PreEscaped};
 
 use crate::{
-    entry_loader::{Entry, EntryLoader},
-    pages::{self, render, Nav},
+    entry_loader::Entry,
+    pages::{self, render, Nav}, EntryLoaders,
 };
 
-pub async fn index(State(loader): State<Arc<EntryLoader>>) -> Markup {
-    let entries = loader.get_entries_by_year();
+pub async fn index(State(loader): State<Arc<EntryLoaders>>) -> Markup {
+    let entries = loader.blog_loader.get_entries_by_year();
 
     render(
         Some("Blog"),
@@ -44,9 +44,9 @@ pub async fn index(State(loader): State<Arc<EntryLoader>>) -> Markup {
 
 pub async fn tag_index(
     Path(tag): Path<String>,
-    State(loader): State<Arc<EntryLoader>>,
+    State(loader): State<Arc<EntryLoaders>>,
 ) -> (StatusCode, Markup) {
-    let entries = match loader.get_entries_by_tag(&tag) {
+    let entries = match loader.blog_loader.get_entries_by_tag(&tag) {
         Some(entries) => entries,
         None => {
             return pages::not_found().await;
@@ -83,11 +83,11 @@ pub async fn tag_index(
 }
 
 pub async fn permalink(
-    State(entries): State<Arc<EntryLoader>>,
+    State(loader): State<Arc<EntryLoaders>>,
     Path(path): Path<String>,
 ) -> (StatusCode, Markup) {
     tracing::debug!(%path, "get permalink");
-    let Some(entry) = entries.get_entry_for_path(&format!("/blog/{}", path)) else {
+    let Some(entry) = loader.blog_loader.get_entry_for_path(&format!("/blog/{}", path)) else {
         return pages::not_found().await;
     };
 

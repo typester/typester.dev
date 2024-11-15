@@ -32,14 +32,15 @@ pub struct EntryLoader {
     prefix: String,
     entries: Vec<Arc<Entry>>,
     permalinks: HashMap<String, Arc<Entry>>,
+    slugs: HashMap<String, Arc<Entry>>,
     tags: HashMap<String, Vec<Arc<Entry>>>,
 }
 
 static BY_YEAR_CACHE: OnceLock<BTreeMap<i32, Vec<Arc<Entry>>>> = OnceLock::new();
 
 impl EntryLoader {
-    pub fn load(prefix: String, data_dir: String) -> anyhow::Result<Arc<Self>> {
-        let entries = load_entries(&data_dir)?;
+    pub fn load(prefix: String, data_dir: String, recursive: bool) -> anyhow::Result<Arc<Self>> {
+        let entries = load_entries(&data_dir, recursive)?;
         Self::from_entries(prefix, entries)
     }
 
@@ -51,9 +52,11 @@ impl EntryLoader {
             .collect::<Vec<Arc<Entry>>>();
 
         let mut permalinks: HashMap<String, Arc<Entry>> = HashMap::new();
+        let mut slugs: HashMap<String, Arc<Entry>> = HashMap::new();
         let mut tags: HashMap<String, Vec<Arc<Entry>>> = HashMap::new();
         for entry in entries.iter() {
             permalinks.insert(format!("{}{}", prefix, entry.permalink()), entry.clone());
+            slugs.insert(entry.slug.clone(), entry.clone());
             for tag in &entry.tags {
                 let t = tags.entry(tag.clone()).or_insert(vec![]);
                 t.push(entry.clone());
@@ -66,6 +69,7 @@ impl EntryLoader {
             prefix,
             entries,
             permalinks,
+            slugs,
             tags,
         }))
     }
@@ -73,6 +77,10 @@ impl EntryLoader {
     pub fn get_entry_for_path(&self, path: &str) -> Option<Arc<Entry>> {
         tracing::trace!(%path, map = ?self.permalinks, "get_entry_for_path");
         self.permalinks.get(path).cloned()
+    }
+
+    pub fn get_entry_for_slug(&self, slug: &str) -> Option<Arc<Entry>> {
+        self.slugs.get(slug).cloned()
     }
 
     pub fn get_entries(&self) -> Vec<Arc<Entry>> {
@@ -99,7 +107,7 @@ impl EntryLoader {
     }
 }
 
-fn load_entries<P: AsRef<Path> + Debug>(dir: P) -> anyhow::Result<Vec<Entry>> {
+fn load_entries<P: AsRef<Path> + Debug>(dir: P, recursive: bool) -> anyhow::Result<Vec<Entry>> {
     let mut data = vec![];
     let re_slug = Regex::new(r"^(?:\d+-\d+-\d+_)?(.*)$")?;
 
@@ -115,8 +123,8 @@ fn load_entries<P: AsRef<Path> + Debug>(dir: P) -> anyhow::Result<Vec<Entry>> {
             }
         };
 
-        if path.is_dir() {
-            let mut d = load_entries(path)?;
+        if path.is_dir() && recursive {
+            let mut d = load_entries(path, recursive)?;
             data.append(&mut d);
         } else if let Some(ext) = path.extension() {
             if ext == "json" {

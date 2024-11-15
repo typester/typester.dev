@@ -16,6 +16,11 @@ use tracing_subscriber::EnvFilter;
 mod entry_loader;
 mod pages;
 
+pub struct EntryLoaders {
+    pub top_loader: Arc<EntryLoader>,
+    pub blog_loader: Arc<EntryLoader>,
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     init_logger();
@@ -24,7 +29,13 @@ async fn main() -> anyhow::Result<()> {
         .ok()
         .unwrap_or("./entries-json".into());
 
-    let blog_entries = EntryLoader::load("/blog".into(), format!("{}/blog", data_dir))?;
+    let top_loader = EntryLoader::load("".into(), data_dir.clone(), false)?;
+    let blog_loader = EntryLoader::load("/blog".into(), format!("{}/blog", data_dir), true)?;
+
+    let loader = Arc::new(EntryLoaders {
+        top_loader,
+        blog_loader,
+    });
 
     let router = Router::new()
         .route("/", get(pages::index::index))
@@ -32,7 +43,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/blog/tags/:tag", get(pages::blog::tag_index))
         .route("/blog/*path", get(pages::blog::permalink))
         .route("/rss", get(rss))
-        .with_state(blog_entries)
+        .with_state(loader)
         .fallback_service(
             ServeDir::new("public").not_found_service(pages::not_found.into_service()),
         );
@@ -55,8 +66,8 @@ fn init_logger() {
     }
 }
 
-async fn rss(State(loader): State<Arc<EntryLoader>>) -> (StatusCode, RssChannel) {
-    let entries = loader.get_entries();
+async fn rss(State(loader): State<Arc<EntryLoaders>>) -> (StatusCode, RssChannel) {
+    let entries = loader.blog_loader.get_entries();
 
     let mut channel = ChannelBuilder::default()
         .title("typester.dev")

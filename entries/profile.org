@@ -1,0 +1,11 @@
+#+TITLE: Profile
+#+DATE: <2024-11-14 Thu 14:20>
+#+TZ: -0800 (PST)
+#+TAGS:
+#+EID: 52ae59ab-aab5-4b0e-b120-af3ed3a4a568
+
+- Software Engineer living in Portland, OR.
+- Specializes in building robust, scalable, and high-performance network software.
+- ❤️ Rust, Beer, Coffee.
+- Long-time *Emacs* user.
+- Advocate for using Rust to implement key functionalities of mobile apps with performance and safety.
