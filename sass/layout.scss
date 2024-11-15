@@ -207,9 +207,39 @@ main#blog {
         }
     }
 
+    section.image {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 24px 0;
+
+        div {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: var(--color-surface-variant);
+            color: var(--color-on-surface-variant);
+            border-radius: 8px;
+            overflow: hidden;
+            padding: 10px;
+            padding-bottom: 0;
+
+            img {
+                max-width: 100%;
+            }
+
+            p {
+                margin: 0;
+                padding: 16px 8px;
+            }
+        }
+    }
+
     section.year, section.tag {
         margin-top: 60px;
-        width: 768px;
+        //width: 768px;
+        max-width: 100%;
         margin-bottom: 64px;
         display: flex;
         gap: 24px;
