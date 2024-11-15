@@ -1,4 +1,4 @@
-#+TITLE: Deploy applications to dokku from Git Actions
+#+TITLE: Deploying to Dokku with Docker Images from GitHub Actions
 #+DATE: <2024-11-15 Fri 11:16>
 #+TZ: -0800 (PST)
 #+TAGS: web github dokku docker
