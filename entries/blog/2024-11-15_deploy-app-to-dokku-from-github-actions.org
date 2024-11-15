@@ -1,0 +1,126 @@
+#+TITLE: Deploy applications to dokku from Git Actions
+#+DATE: <2024-11-15 Fri 11:16>
+#+TZ: -0800 (PST)
+#+TAGS: web github dokku docker
+#+EID: d9a4d333-42cb-41af-b71a-309b0588feb9
+
+This website is deployed using [[https://dokku.com/][Dokku]].[fn:1]
+
+While it's possible to deploy to a Dokku host by pushing code directly from Git, the server running Dokku in my case doesn't have enough capacity to handle application builds. I wanted to avoid building the application directly on the Dokku host.
+
+To solve this, I decided to use GitHub Actions to build Docker images and deploy those images to Dokku. After some trial and error, I’ve documented the process here for reference.
+
+Below is the workflow file for the GitHub Action I currently use:
+
+#+begin_quote
+[[https://github.com/typester/typester.dev/blob/main/.github/workflows/deploy.yml][deploy.yml]]
+#+end_quote
+
+The process flow is as follows:
+
+1. Check for code changes
+   - If the app code is updated:
+     - -> Set ~steps.changes.outputs.code == true~
+   - If entry files are updated:
+     - -> Set ~steps.changes.outputs.entries == true~
+2. If entry files are updated:
+   - Sync entry files using rsync
+3. If the app needs an update:
+   - Build a Docker image
+   - Upload the built image to the GitHub Container Registry
+   - Deploy the image to Dokku
+4. If only the entry files were updated:
+   - Restart the service in Dokku to reload the entries
+
+* Filtering types of repository changes
+
+The trickiest part of creating this workflow was detecting the type of code changes. This was necessary because not all commits require redeploying the application.
+
+In my case, both application code and blog entry files are stored in the same repository. I wanted to support scenarios where only entries are updated without redeploying the application.
+
+Initially, I attempted to handle this manually, but it almost drove me crazy. Thankfully, the [[https://github.com/dorny/paths-filter][dorny/paths-filter]] action saved the day. This is truly a fantastic action.
+
+Handling this manually would have required detecting changes across various scenarios, such as single commits (I allow direct commits to the main branch for entry updates) and pull request merges and etc. I deeply appreciate the effort of those who made this action available.
+
+* Executing Dokku commands from GitHub Actions
+
+Most Dokku commands can be executed over SSH, so enabling SSH access to the Dokku host from GitHub Actions is sufficient.
+
+First, generate an SSH key pair:
+
+#+begin_src shell
+  $ ssh-keygen -t ed25519 -f dokku
+#+end_src
+
+This generates a private key (=dokku=) and a public key (=dokku.pub=).
+
+Register the public key on the Dokku host:
+
+#+begin_src shell
+  $ echo "your pubkey here" | dokku ssh-keys:add github
+  $ echo "your pubkey here" >> ~/.ssh/authorized_keys
+#+end_src
+
+The first line is required for using Dokku commands, while the second is for rsync operations. If you only need to run Dokku commands, the first line alone is sufficient.
+
+Next, register the private key on GitHub:
+
+#+begin_export html
+<section class="image">
+  <div>
+    <a data-flickr-embed="true" href="https://www.flickr.com/photos/typester/54142543399/in/datetaken-public/" title="screenshot_20241115-120846"><img src="https://live.staticflickr.com/65535/54142543399_51d9017904_h.jpg" width="1600" height="305" alt="screenshot_20241115-120846"/></a><script async src="//embedr.flickr.com/assets/client-code.js" charset="utf-8"></script>
+    <p>Setting -> Secrets and Variables -> Actions -> Repository Secrets</p>
+  </div>
+</section>
+#+end_export
+
+I registered it as =DOKKU_SSH_KEY=.
+
+Finally, add a step to place the key in the appropriate location so subsequent steps can access the Dokku host via SSH:
+
+#+begin_src yaml
+  - name: Set up SSH key
+    run: |
+      mkdir -p ~/.ssh
+      echo "${{ secrets.DOKKU_SSH_KEY }}" > ~/.ssh/id_ed25519
+      chmod 600 ~/.ssh/id_ed25519
+      ssh-keyscan -H typester.dev >> ~/.ssh/known_hosts
+#+end_src
+
+* Building and uploading Docker images to GitHub Container Registry
+
+This step was straightforward and mostly followed [[https://docs.github.com/en/actions/use-cases-and-examples/publishing-packages/publishing-docker-images#publishing-images-to-github-packages][official documentation]].
+
+* Deploying Docker images to Dokku
+
+The deployment step looks like this:
+
+#+begin_src yaml
+  - name: Deploy image to production
+    if: steps.changes.outputs.code == 'true'
+    run: |
+      ssh dokku@typester.dev git:from-image typester.dev ghcr.io/typester/typester.dev@${{ steps.push.outputs.digest }}
+#+end_src
+
+Initially, I set the image target as something like =typester.dev:main=, but if the image existed locally, it wouldn't pull the updated one. To fix this, I started specifying the digest value from the previous build step.
+
+* Restarting the service
+
+When only entries are updated, restarting the service reloads the entries. The following step handles this:
+
+#+begin_src yaml
+  - name: Restart production server to reflect entries update
+    if: steps.changes.outputs.code != 'true' && steps.changes.outputs.entries == 'true'
+    run: |
+      ssh dokku@typester.dev ps:restart typester.dev
+#+end_src
+
+Both the image deployment and service restart steps ensure zero downtime by switching traffic to the new service only after it is up and running by Dokku. This is excellent!
+
+* Conclusion
+
+Dokku is amazing.
+
+* Footnotes
+
+[fn:1] The source code for the entire site is available here: https://github.com/typester/typester.dev

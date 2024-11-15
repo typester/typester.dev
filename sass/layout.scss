@@ -11,7 +11,8 @@ body {
 
         @media (max-width: 768px) {
             max-width: 100%;
-            padding: 8px;
+            padding: 16px;
+            font-size: 1.25rem;
         }
     }
 }
@@ -169,10 +170,6 @@ main#blog {
         border-radius: 8px;
         overflow: auto;
 
-        @media (max-width: 768px) {
-            margin: 8px;
-        }
-
         > code {
             font-size: 1.1rem;
             display: block;
@@ -193,7 +190,7 @@ main#blog {
         line-height: 1.45;
     }
 
-    p, ul, ol {
+    p, li {
         > code {
             font-size: 1.1rem;
             color: var(--color-inverse-on-surface);
@@ -201,10 +198,10 @@ main#blog {
             padding: 0 8px;
             border-radius: 8px;
         }
+    }
 
-        li {
-            line-height: 1.45;
-        }
+    li {
+        line-height: 1.45;
     }
 
     section.image {
@@ -227,6 +224,7 @@ main#blog {
 
             img {
                 max-width: 100%;
+                height: auto;
             }
 
             p {
