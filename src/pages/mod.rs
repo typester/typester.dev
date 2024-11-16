@@ -38,6 +38,7 @@ pub fn render(
                 link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Outfit";
                 link rel="stylesheet" href="/css/main.css";
                 link rel="alternate" type="application/rss+xml" href="/rss" title="RSS Feed";
+                link rel="me" href="https://pdx.social/@typester";
                 meta property="og:site_name" content="typester.dev";
                 meta property="og:title" content=(page_title);
                 @if let Some(entry) = entry {
