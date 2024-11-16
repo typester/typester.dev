@@ -27,7 +27,7 @@ pub async fn index(State(loader): State<Arc<EntryLoaders>>) -> Markup {
                         section {
                             @for entry in entries.iter() {
                                 article data-eid=(entry.eid) {
-                                    .month { (entry.date.format("%b %m")) }
+                                    .month { (entry.date.format("%b %d")) }
                                     h2 {
                                         a href=(format!("/blog{}", entry.permalink())) {
                                             (entry.title)
