@@ -1,0 +1,16 @@
+<div style="display:flex; gap: 20px; padding: 10px;">
+  <button id="disable-umami">Disable Umami</button>
+  <button id="enable-umami">Enable Umami</button>
+</div>
+
+<script>
+  document.getElementById("disable-umami").addEventListener("click", () => {
+      console.log("disable");
+      localStorage.setItem('umami.disabled', 1);
+  });
+
+  document.getElementById("enable-umami").addEventListener("click", () => {
+      console.log("enable");
+      localStorage.removeItem('umami.disabled');
+  });
+</script>
