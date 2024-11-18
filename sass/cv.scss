@@ -1,0 +1,117 @@
+@import "normalize";
+@import "variables";
+
+body {
+    background-color: var(--color-background);
+    color: var(--color-on-background);
+    font-family: Outfit, sans-serif;
+    font-size: 1.1rem;
+
+    a {
+        color: var(--color-on-background);
+        text-decoration: underline;
+    }
+
+    display: flex;
+    flex-direction: column;
+    width: 960px;
+    margin: 0 auto;
+
+    h1 {
+        font-size: 1.6rem;
+        align-self: center;
+    }
+
+    h2 {
+        margin: 0.8rem 0;
+        margin-bottom: 0.4rem;
+    }
+
+    h3 {
+        margin-top: 1rem;
+        margin-bottom: 0.2rem;
+    }
+
+    p {
+        margin: 1rem 0;
+    }
+
+    #contacts {
+        display: flex;
+        align-self: center;
+
+        ul {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            margin: 0;
+
+            li {
+                display: flex;
+                list-style: none;
+                position: relative;
+
+                &:not(:last-child)::after {
+                    content: "—";
+                    position: absolute;
+                    right: -22px;
+                }
+            }
+
+            a {
+                display: flex;
+                align-items: baseline;
+                gap: 4px;
+
+                figure {
+                    margin: 0;
+                    width: 14px;
+                    position: relative;
+                    top: 2px;
+
+                    svg {
+                        color: var(--color-on-background);
+                    }
+                }
+            }
+        }
+    }
+
+    #experiences {
+        li {
+            margin: 4px 0;
+        }
+        .experience, .experience-small {
+            .header {
+                display: flex;
+                align-items: baseline;
+
+                .location {
+                    margin-left: 12px;
+                    flex-grow: 1;
+                }
+
+                .duration {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-end;
+                }
+            }
+        }
+
+        .experience {
+            margin-bottom: 20px;
+        }
+
+        .experience-small {
+            h3 {
+                margin: 0.4rem;
+            }
+        }
+    }
+
+
+}
+
+
+
