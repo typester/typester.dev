@@ -1,0 +1,176 @@
+#+TITLE: Mobile-app core in Rust #2: Setup environment
+#+DATE: <2024-11-16 Sat 05:32>
+#+TZ: -0800 (PST)
+#+TAGS: rust rust-mobile-core ios android
+#+EID: 9f93b1b2-49e4-4fff-8556-d1840d926e5a
+
+This entry is the second in the [[https://typester.dev/blog/tags/rust-mobile-core][#rust-mobile-core]] series. Today, I will cover setting up the environment for developing an app using this architecture.
+
+Environment setup can be divided into tasks that you need to do only once and tasks that need to be done for each project. This entry will cover the former.
+
+Once you complete the steps in this entry, you should be able to build my [[https://github.com/typester/auth2/][sample project]]. I will explain how to do that at the end of this post.
+
+* Install Required Software
+
+Obviously, you'll need [[https://developer.android.com/studio][Android Studio]] for Android development and [[https://developer.apple.com/xcode/][Xcode]] for iOS development. Please install them if they aren't already on your system.
+
+I use Linux for Android development and macOS for iOS development, so my explanations will be based on those environments. For Android Studio, there should be no significant differences between Linux and macOS except for file paths, so adapt accordingly.
+
+* Installing the NDK (Android Only)
+
+If you are developing an Android app, in addition to Android Studio itself, you'll need to install the [[https://developer.android.com/ndk][NDK]].
+
+To install the NDK, select =Tools -> SDK Manager= from the Android Studio menu. Then, select the =SDK Tools= tab in the middle of the page.
+
+Make sure to check the box for =Show Package Details= in the bottom right to specify the NDK version.
+
+The screen should look something like this:
+
+#+begin_export html
+<section class="image">
+  <div>
+    <a data-flickr-embed="true" href="https://www.flickr.com/photos/typester/54148129872/in/datetaken-public/" title="install ndk"><img src="https://live.staticflickr.com/65535/54148129872_ff3ca10fba_h.jpg" width="1505" height="1114" alt="install ndk"/></a><script async src="//embedr.flickr.com/assets/client-code.js" charset="utf-8"></script>
+  </div>
+</section>
+#+end_export
+
+Here, select =22.1.7171670= for the NDK version, then click OK or Apply to install it.
+
+#+begin_export html
+<section class="notice">
+#+end_export
+** Why Use an Older Version of the NDK?
+
+I started developing with this architecture about two years ago. At that time, with the then-latest NDK version, Rust library builds would seem successful but result in an error at runtime due to missing symbols. While simpler libraries were unaffected, more complex libraries that used various crates had a high probability of encountering this issue. Eventually, I resolved this by downgrading to version 22, after which the problem disappeared. Since then, I've been sticking with this version.
+
+However, I haven't tried newer NDK versions since then, so if anyone has information on the current state of the NDK, I'd be happy to hear it.
+
+#+begin_export html
+</section>
+#+end_export
+
+** Modifying the NDK to Enable Rust Library Builds
+
+By default, trying to build a Rust library with the NDK might result in errors such as missing =libgcc.a= or =libunwind.a=. With version =22.1.7171670=, you'll likely see an error indicating that =libunwind.a= could not be found, as follows:
+
+#+begin_src shell
+  = note: ld: error: unable to find library -lunwind
+          clang: error: linker command failed with exit code 1 (use -v to see invocation)
+#+end_src
+
+You can solve this by creating a =libunwind.a= file in the same directory as =libgcc.a=, with the following content:
+
+#+begin_src shell
+  INPUT(-lgcc)
+#+end_src
+
+In newer NDK versions, the roles of =libunwind= and =libgcc= may be reversed, in which case creating a =libgcc.a= file referring to =libunwind= should solve the problem.
+
+Below is the shell script I used:
+
+#+begin_src shell
+  find ~/Android/Sdk/ndk/22.1.7171670/toolchains -name libgcc.a | while read libgcc_path; do
+    dir_path=$(dirname "$libgcc_path")
+    echo 'INPUT(-lgcc)' > "$dir_path/libunwind.a"
+  done
+#+end_src
+
+* Adding NDK to PATH
+
+If you installed the NDK in the default location, it should be at the following paths:
+
+- *Linux*: =~/Android/Sdk/ndk/22.1.7171670=
+- *macOS*: =~/Library/Android/sdk/ndk/22.1.7171670=
+
+If it's in a different location, adjust accordingly. The directory that needs to be added to PATH is as follows:
+
+- *Linux*: =~/Android/Sdk/ndk/22.1.7171670/toolchains/llvm/prebuilt/linux-x86_64/bin=
+- *macOS*: =~/Library/Android/sdk/ndk/22.1.7171670/toolchains/llvm/prebuilt/darwin-x86_64/bin=
+
+This completes the NDK-side setup.
+
+* Installing Rust
+
+I assume readers of this series already have experience with Rust, so I won't go into much detail on installing Rust itself. For this post, I'll assume Rust is installed via =rustup=.
+
+* Adding Mobile Targets for Rust
+
+Please add the following targets. Here, we're only targeting 64-bit architectures. If you want to support older 32-bit devices, you'll need to add those targets as well.
+
+- For Android:
+  - =aarch64-linux-android=
+  - =x86_64-linux-android=
+- For iOS:
+  - =aarch64-apple-ios=
+  - =aarch64-apple-ios-sim=
+
+If you're using an Intel Mac, add =x86_64-apple-ios= instead of =aarch64-apple-ios-sim=.
+
+You can add the targets with the following commands:
+
+#+begin_src shell
+  # targets for Android
+  rustup target add arch64-linux-android x86_64-linux-android
+
+  # targets for iOS
+  rustup target add aarch64-apple-ios aarch64-apple-ios-sim
+#+end_src
+
+* Configuring Cargo
+
+Open =~/.cargo/config.toml= and add the following:
+
+#+begin_src conf
+  [target.aarch64-linux-android]
+  linker = "aarch64-linux-android30-clang"
+
+  [target.x86_64-linux-android]
+  linker = "x86_64-linux-android30-clang"
+#+end_src
+
+* Installing cargo-lipo
+
+For building iOS libraries, [[https://github.com/TimNN/cargo-lipo][cargo-lipo]] makes it easy to create universal libraries without needing to do it manually. Install it with the following command:
+
+#+begin_src shell
+  cargo install cargo-lipo
+#+end_src
+
+* Verifying the Setup
+
+After completing the setup, you should be able to build my sample project. Follow the steps below to try building the project.
+
+The sample project can be found here:
+
+#+begin_quote
+https://github.com/typester/auth2/
+#+end_quote
+
+** Android
+
+Use the following command to generate the Rust library and Kotlin bindings:
+
+#+begin_src shell
+  cd ./core
+  ./build-android-lib.sh
+#+end_src
+
+Once the build completes without errors, you should be able to open the =android= directory in Android Studio and run the app.
+
+** iOS
+
+Use the following command to build the Rust library:
+
+#+begin_src shell
+  cd ./core
+  cargo lipo --release
+  cargo build --release --target aarch64-apple-ios-sim
+#+end_src
+
+Once this completes without errors, you should be able to open =ios/Auth2.xcodeproj= in Xcode and run the app.
+
+* Summary
+
+In this entry, I summarized the setup process for the [[https://typester.dev/blog/tags/rust-mobile-core][#rust-mobile-core]] environment. Setting up Android development can be a bit of a hassle, but once it's done, you won't need to worry about it anymore, so let's get through this initial effort.
+
+Next time, I'll write about how to start a project and the setup needed for each project.
