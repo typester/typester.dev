@@ -45,7 +45,7 @@ jobs:
       - name: Deploy entries
         if: steps.changes.outputs.entries == 'true'
         run: |
-          rsync -av --delete ./entries-json/ root@typester.dev:entries/
+          rsync -av --delete ./entries-json/ ubuntu@typester.dev:entries/
 
       - name: Set up QEMU
         if: steps.changes.outputs.code == 'true'
@@ -56,7 +56,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
       - name: Log in to the Container registry
         if: steps.changes.outputs.code == 'true'
-        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -64,7 +64,7 @@ jobs:
       - name: Extract metadata (tags, labels) for Docker
         if: steps.changes.outputs.code == 'true'
         id: meta
-        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
