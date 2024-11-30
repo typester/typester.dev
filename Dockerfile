@@ -1,6 +1,6 @@
 ARG RUST_VERSION=latest
 
-FROM --platform=$BUILDPLATFORM ghcr.io/typester/rust-musl-cross-docker-arch:$RUST_VERSION-$TARGETARCH AS builder
+FROM ghcr.io/typester/rust-musl-cross-docker-arch:$RUST_VERSION-$TARGETARCH AS builder
 
 COPY . .
 RUN cargo build --release --target ${RUST_MUSL_CROSS_TARGET}

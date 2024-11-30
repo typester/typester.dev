@@ -50,8 +50,7 @@ jobs:
       - name: Set up QEMU
         if: steps.changes.outputs.code == 'true'
         uses: docker/setup-qemu-action@v3
-        with:
-          platforms: amd64,arm64
+
       - name: Set up Docker Buildx
         if: steps.changes.outputs.code == 'true'
         uses: docker/setup-buildx-action@v3
@@ -72,7 +71,7 @@ jobs:
       - name: Build and push Docker image
         if: steps.changes.outputs.code == 'true'
         id: push
-        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: true
