@@ -61,7 +61,7 @@ pub fn render(
                 }
 
                 @if !cfg!(debug_assertions) {
-                    script src="https://umami.typester.dev/script.js" data-website-id="649e0ea6-cd59-453a-8ef3-7f104699aedb" {}
+                    script defer src="https://umami.typester.dev/script.js" data-website-id="649e0ea6-cd59-453a-8ef3-7f104699aedb" {}
                 }
             }
         }
