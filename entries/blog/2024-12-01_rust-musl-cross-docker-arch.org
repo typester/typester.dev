@@ -1,0 +1,58 @@
+#+TITLE: Introducing rust-musl-cross-docker-arch
+#+DATE: <2024-12-04 Wed 09:54>
+#+TZ: -0800 (PST)
+#+TAGS: rust docker
+#+EID: 354eca2e-1e93-441d-8dae-0f91688116c9
+
+I created a project called [[https://github.com/typester/rust-musl-cross-docker-arch][rust-musl-cross-docker-arch]].
+
+This is simply a retagged version of [[https://github.com/rust-cross/rust-musl-cross][rust-musl-cross]] with tags in the format =${RUST_VERSION}-${ARCH}= (e.g., =1.83.0-arm64=).
+
+* What is rust-musl-cross?
+
+This is a Docker image that allows you to cross-compile static Rust programs for various architectures using musl. It is very convenient when you need to cross-build.
+
+Even without cross-building, creating statically compiled applications lets you transfer only the Rust binary to a small base image, enabling you to create compact Docker images, which can improve deployment speed. Personally, I use this image to create small Docker images when deploying to low-spec edge devices or VPS environments.
+
+For example, the Dockerfile for this blog (operated on a budget VPS) looks like this:
+
+#+begin_src dockerfile
+  ARG RUST_VERSION=latest
+
+  FROM ghcr.io/typester/rust-musl-cross-docker-arch:$RUST_VERSION-$TARGETARCH AS builder
+
+  COPY . .
+  RUN cargo build --release --target ${RUST_MUSL_CROSS_TARGET}
+
+  # Runtime
+  FROM alpine
+
+  WORKDIR /app
+
+  # Timezone PST
+  RUN apk add --no-cache tzdata
+  ENV TZ=America/Los_Angeles
+
+  # Copy application binary from builder image
+  COPY --from=builder /home/rust/src/target/*/release/blog .
+  # Copy static files
+  COPY ./public /app/public
+
+  ENV RUST_LOG=info
+
+  EXPOSE 3000
+
+  CMD ["/app/blog"]
+#+end_src
+
+This results in an image of 16.8MB. If you strip the binary (not shown here), the size can be reduced to around 15MB.
+
+Using even smaller base images like =scratch= can make the image smaller, but such images make it harder to debug issues within the container if something goes wrong. That’s why I use =alpine=.
+
+This project was created to address the difficulty of writing Dockerfiles when using the =rust-musl-cross= tags, especially when supporting multi-architecture builds, by retagging images to better suit my needs.
+
+I created this for personal use, but anyone else who wants to use it is more than welcome. Feedback is also greatly appreciated!
+
+* There is also muslrust
+
+While writing this article, I found another project called [[https://github.com/clux/muslrust][muslrust]]. This project also provides base images for creating small Docker images. It includes libraries like OpenSSL and libcurl, which are commonly used, making it a good choice for those who need them.
