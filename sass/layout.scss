@@ -73,6 +73,7 @@ strong {
 }
 
 footer {
+    margin-top: 64px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -235,11 +236,13 @@ main#blog {
         }
     }
 
+    section.year {
+        width: 768px;
+    }
+
     section.year, section.tag {
         margin-top: 60px;
-        //width: 768px;
         max-width: 100%;
-        margin-bottom: 64px;
         display: flex;
         gap: 24px;
         @media (max-width: 768px) {

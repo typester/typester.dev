@@ -1,0 +1,101 @@
+#+TITLE: Migrating keyboard remapper to Xremap
+#+DATE: <2025-01-29 Wed 09:07>
+#+TZ: -0800 (PST)
+#+TAGS: linux wayland xremap river
+#+EID: e8e36786-de37-4160-995d-f199c0a774f8
+
+I had been looking for a remapper that allows changing key mappings *per application* on Wayland, but I struggled to find a good one.
+
+Recently, I happened to come across [[https://github.com/xremap/xremap][Xremap]] again and decided to reread its README. I had known about this tool for a long time, but I remember it being written in Python back then and lacking Wayland support. However, it is now written in Rust and supports Wayland. It also seemed to support everything I wanted to achieve.
+
+So, I decided to give it a try.
+
+* Installation
+
+I use Arch Linux with [[https://isaacfreund.com/software/river/][river]].
+
+Since river is a wlroots-based window manager, I installed the following:
+
+#+begin_src sh
+  ❯ paru -S xremap-wlroots-bin
+#+end_src
+
+* Configuration
+
+Add the user to the input group and set up a udev rule.
+
+#+begin_src sh
+  ❯ sudo usermod -a -G input $USER
+  ❯ echo 'KERNEL=="uinput", GROUP="input", TAG+="uaccess"' | sudo tee /etc/udev/rules.d/99-input.rules
+#+end_src
+
+Then, restart the system.
+
+* Remapping Configuration
+
+Here’s what I wanted to achieve with this tool:
+
+- Use the Space key as Shift when held but as Space when pressed alone.
+  - Disable this functionality for specific applications (mainly games).
+- Adjust key mappings for each keyboard hardware.
+
+The following configuration meets these requirements:
+
+#+begin_src yaml
+  shared:
+    games: &games
+      - steam_app_default  # DiabloIV
+      - steam_app_2694490  # POE2
+
+  modmap:
+    - name: SandS
+      application:
+        not: *games
+      remap:
+        Space:
+          held: Shift_L
+          alone: Space
+          alone_timeout_millis: 999999999
+
+    - name: HHKB
+      device:
+        only: "Topre Corporation HHKB Professional"
+      remap:
+        KEY_GRAVE: KEY_ESC
+        KEY_ESC: KEY_GRAVE
+        KEY_BACKSLASH: KEY_BACKSPACE
+        KEY_BACKSPACE: KEY_BACKSLASH
+#+end_src
+
+The startup command is set in the river configuration:
+
+#+begin_src sh
+  xremap ~/.config/xremap/config.yaml --watch=config,device &
+#+end_src
+
+This is how I start it.
+
+** Unclear Aspects
+
+1. The =alone_timeout_millis= setting
+2. How to specify applications
+3. The =watch= command-line option
+
+*** The =alone_timeout_millis= Setting
+
+I wanted to disable this timeout, so I initially set it to =0=. However, this caused the Space key to no longer function as Space when pressed alone😂
+I can’t imagine anyone wanting that behavior, so it didn’t make sense at all. For now, I decided to set it to a sufficiently large value.
+
+*** How to Specify Applications
+
+The documentation includes an example for Sway, but there was no description of how to specify applications in general wlroots-based WMs. I wasn’t sure what to use at the first glance.
+After some experimentation, I found that specifying the =app_id= retrieved from =lswt= seems to work.
+
+*** The =watch= Command-Line Option
+
+Initially, I simply specified =--watch=, but it didn’t seem to enable automatic config reloading.  
+It appears that specifying it more explicitly, such as =--watch=config=, is necessary for it to work.
+
+* Summary
+
+Despite some unclear aspects, I’m satisfied with the setup for now. Xremap also has other interesting features, so I’d like to explore them at some point.
