@@ -1,0 +1,111 @@
+#+TITLE: Controlling YouTube Music on a Wayland Desktop
+#+DATE: <2025-02-06 Thu 14:08>
+#+TZ: -0800 (PST)
+#+TAGS: linux wayland music
+#+EID: e60474d9-a063-48d3-80ae-1faa711ea29d
+
+I've been using YouTube Music for listening to music over the past few years. In the past, I used Apple Music and Spotify, but I got drawn into YouTube Premium’s bundled offer and ended up switching😁
+
+Until now, I barely used it on my PC, mainly relying on my phone while driving.
+
+However, since changing jobs, my meetings have drastically decreased, allowing me to focus for long periods. As a result, I’ve recently started listening to music on my PC again.
+
+For a while, I used it normally in a browser, but I became frustrated by the lack of global shortcut key support for playback control. After some research, I found that the [[https://github.com/th-ch/youtube-music][th-ch/youtube-music]] app has a plugin that supports global shortcuts. So gave it a try.
+
+* Installation
+
+On Arch Linux, an AUR package is available, so installation is as simple as running:
+
+#+begin_src sh
+  $ paru -S youtube-music-bin
+#+end_src
+
+The app looks like this:
+
+#+begin_export html
+<section class="image">
+  <div>
+    <a data-flickr-embed="true" href="https://www.flickr.com/photos/typester/54311506338/in/datetaken-public/" title="YouTube Music Desktop App"><img src="https://live.staticflickr.com/65535/54311506338_1f3278c2cf_h.jpg" width="1600" height="900" alt="YouTube Music Desktop App"/></a><script async src="//embedr.flickr.com/assets/client-code.js" charset="utf-8"></script>
+  </div>
+</section>
+#+end_export
+
+* Enabling Wayland
+
+Like other Electron-based apps, Wayland is not enabled by default. To enable it, create a file at =~/.config/youtube-music-flags.conf= and add the following setting:
+
+#+begin_src conf
+  --ozone-platform=wayland
+#+end_src
+
+* Configuring Global Shortcuts
+
+The shortcut plugin mentioned earlier does not seem to work on Wayland.
+
+However, there is another plugin called the API Server plugin, which I was able to use to achieve the same goal.
+
+* API Server Plugin
+
+I had a bit of trouble finding instructions on how to use it. Since I couldn’t locate any documentation, I searched through issues and found what I needed.
+
+Once the plugin is enabled, you can access the API documentation at:
+
+#+begin_src text
+  http://api-host:api-port/swagger
+#+end_src
+
+I use the default settings except for setting the host to 127.0.0.1 to prevent external access.
+
+** Authentication
+
+You can obtain a token by sending a POST request to =/auth/{id}=. After that, you can use the token to interact with other API endpoints.
+
+#+begin_src sh
+  ❯ curl -i -X POST 127.0.0.1:26538/auth/me
+  HTTP/1.1 200 OK
+  access-control-allow-origin: *
+  access-control-request-private-network: true
+  content-type: application/json
+  content-length: 137
+  Date: Thu, 06 Feb 2025 21:54:08 GMT
+  Connection: keep-alive
+  Keep-Alive: timeout=5
+
+  {"accessToken":"<my access token>"}
+#+end_src
+
+At first, I couldn’t use the issued token due to Unauthorized errors, but restarting the app fixed the issue.
+
+** Controlling Playback
+
+I configured key bindings in [[https://isaacfreund.com/software/river/][river]] to call the API, achieving the intended functionality.
+
+First, I created the following script:
+
+#+begin_src sh
+  #!/bin/sh
+
+  TOKEN="<my token here>"
+
+  if [ -z "$1" ]; then
+      echo "Usage: $0 <operation>"
+      exit 1
+  fi
+
+  OP=$1
+
+  exec curl -X POST \
+       -H "Authorization: Bearer $TOKEN" \
+       "http://127.0.0.1:26538/api/v1/$OP"
+#+end_src
+
+Then, I configured river to use this script:
+
+#+begin_src sh
+  # Youtube Music Control
+  riverctl map normal Super W spawn "~/.config/river/youtube-music.sh toggle-play"
+  riverctl map normal Super Q spawn "~/.config/river/youtube-music.sh previous"
+  riverctl map normal Super E spawn "~/.config/river/youtube-music.sh next"
+#+end_src
+
+Now, I can comfortably enjoy music!
