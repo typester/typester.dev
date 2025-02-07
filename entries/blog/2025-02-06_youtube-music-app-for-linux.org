@@ -3,6 +3,7 @@
 #+TZ: -0800 (PST)
 #+TAGS: linux wayland music
 #+EID: e60474d9-a063-48d3-80ae-1faa711ea29d
+#+IMAGE: https://live.staticflickr.com/65535/54311506338_1f3278c2cf_h.jpg
 
 I've been using YouTube Music for listening to music over the past few years. In the past, I used Apple Music and Spotify, but I got drawn into YouTube Premium’s bundled offer and ended up switching😁
 
