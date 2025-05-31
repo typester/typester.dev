@@ -7,6 +7,7 @@ use crate::entry_loader::Entry;
 
 pub mod blog;
 pub mod index;
+pub mod well_known;
 
 #[derive(PartialEq)]
 pub enum Nav {

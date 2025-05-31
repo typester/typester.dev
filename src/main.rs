@@ -43,6 +43,14 @@ async fn main() -> anyhow::Result<()> {
         .route("/blog/tags/:tag", get(pages::blog::tag_index))
         .route("/blog/*path", get(pages::blog::permalink))
         .route("/rss", get(rss))
+        .route(
+            "/.well-known/matrix/server",
+            get(pages::well_known::matrix_server),
+        )
+        .route(
+            "/.well-known/matrix/client",
+            get(pages::well_known::matrix_client),
+        )
         .with_state(loader)
         .fallback_service(
             ServeDir::new("public").not_found_service(pages::not_found.into_service()),
