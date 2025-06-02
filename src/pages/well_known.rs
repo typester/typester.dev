@@ -25,9 +25,6 @@ pub async fn matrix_client() -> Response {
         "m.homeserver": {
             "base_url": "https://matrix.typester.dev"
         },
-        "org.matrix.msc3575.proxy": {
-            "url": "https://sync.typester.dev"
-        }
     });
 
     (
