@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use axum::http::StatusCode;
+use chrono::Datelike;
 use maud::{html, Markup, PreEscaped, DOCTYPE};
 
 use crate::entry_loader::Entry;
@@ -79,6 +80,9 @@ fn nav(nav: Nav) -> Markup {
                 (nav_item(nav == Nav::Blog, html! {
                     a href="/blog" { "Blog" }
                 }))
+                (nav_item(nav == Nav::CV, html! {
+                    a href="/cv.html" { "CV" }
+                }))
             }
         }
     }
@@ -95,10 +99,11 @@ fn nav_item(selected: bool, content: Markup) -> Markup {
 }
 
 fn footer() -> Markup {
+    let yr = chrono::Local::now().year();
     html! {
         footer {
             p {
-                "Copyright " (PreEscaped("&copy;")) " 2024 by Daisuke Murase."
+                "Copyright " (PreEscaped("&copy;")) " 2024-" (yr) " by Daisuke Murase."
             }
             p {
                 "Powered by ";
