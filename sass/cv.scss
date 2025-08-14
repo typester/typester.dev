@@ -77,7 +77,7 @@ body {
         }
     }
 
-    #experiences {
+    #experiences, #advisory {
         li {
             margin: 4px 0;
         }
@@ -110,7 +110,9 @@ body {
         }
     }
 
-
+    #advisory {
+        margin-top: 10px;
+    }
 }
 
 
