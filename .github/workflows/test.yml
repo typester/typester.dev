@@ -15,6 +15,7 @@ jobs:
         with:
           toolchain: stable
           override: true
+          components: rustfmt
       - name: Run tests
         run: cargo test
       - name: Check formatter
