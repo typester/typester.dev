@@ -1,0 +1,134 @@
+#+TITLE: Retrieve River wayland compositor state via GraphQL
+#+DATE: <2025-09-27 Sat 21:47>
+#+TZ: -0700 (PDT)
+#+TAGS: linux wayland river rust graphql
+#+EID: 61278308-fad3-4a8f-8fc6-39b903da0b6a
+#+IMAGE: https://live.staticflickr.com/65535/54816919324_fb7e775e79_b.jpg
+
+At work I use GraphQL quite a lot, but in my personal projects—or outside of work—I hadn’t been using it at all.
+So I thought: wouldn’t it be fun to make various things accessible via GraphQL?
+As a start, I built something that exposes information from *River*, my favorite Wayland compositor.
+
+#+begin_quote
+[[https://github.com/typester/riverql][typester/riverql: GraphQL bridge for the River Wayland compositor, plus a lightweight CLI client.]]
+#+end_quote
+
+* Examples
+
+** List of outputs
+
+#+begin_src shell
+  ❯ riverql 'query { outputs { name } }'
+  {"data":{"outputs":[{"name":"DP-1"},{"name":"DP-2"}]}}
+#+end_src
+
+** Tag information of DP-1
+
+#+begin_src shell
+  ❯ riverql 'query { output(name: "DP-1") { viewTags, focusedTags, urgentTags } }'
+  {"data":{"output":{"focusedTags":5,"urgentTags":0,"viewTags":[4,1,2,512,256]}}}
+#+end_src
+
+** Array version
+
+River represents tag information as a bitmask, but for software that cannot easily handle bit operations there is also a =tagsList= flag.
+When you pass =tagList: true=, you get the data in array form instead of bitmasks:
+
+#+begin_src shell
+  ❯ riverql 'query { output(name: "DP-1", tagList: true) { viewTagsList, focusedTagsList, urgentTagsList } }'
+  {"data":{"output":{"focusedTagsList":[0,2],"urgentTagsList":[],"viewTagsList":[2,0,1,9,8]}}}
+#+end_src
+
+The result is the same as above, but expressed as arrays.
+I implemented this because I needed it when integrating with eww, as I’ll describe later.
+
+** Real-time updates (subscription)
+
+All of this information can also be retrieved in real time via GraphQL subscriptions:
+
+#+begin_src shell
+  ❯ riverql 'subscription { events: eventsForOutput(outputName: "DP-1", tagList: true) { type: __typename ... on OutputFocusedTags { tagsList } ... on SeatFocusedView { title }}}'
+  {"data":{"events":{"tagsList":[0],"type":"OutputFocusedTags"}}}
+  {"data":{"events":{"title":"typester@karas:~","type":"SeatFocusedView"}}}
+  {"data":{"events":{"title":"Emacs","type":"SeatFocusedView"}}}
+  {"data":{"events":{"tagsList":[2],"type":"OutputFocusedTags"}}}
+  {"data":{"events":{"title":"typester@karas:~","type":"SeatFocusedView"}}}
+  {"data":{"events":{"tagsList":[0],"type":"OutputFocusedTags"}}}
+  {"data":{"events":{"tagsList":[0,2],"type":"OutputFocusedTags"}}}
+  {"data":{"events":{"title":"Emacs","type":"SeatFocusedView"}}}
+  ...(snip)...
+#+end_src
+
+This was my first time using subscriptions, since I had never needed them at work.
+To my surprise, they turned out to be very convenient. The server-side implementation wasn’t that difficult either, so if I get the chance I’d like to use subscriptions at work too.
+
+** Server
+
+Running =riverql --server= launches a GraphQL server.
+By default it listens on a Unix socket[fn:1], but if you use something like =--listen tcp://127.0.0.1:8080=, it works as a regular HTTP server.
+GraphQL is then available at =(http|ws)://127.0.0.1:8080/graphql=, and you can open =http://127.0.0.1:8080/graphiql= in your browser to play around with queries in a GraphQL IDE.
+
+* Building a status bar with Eww
+
+[[https://github.com/elkowar/eww][Eww]] is one of my favorite pieces of software.
+It lets you build GTK widgets using a Lisp-like DSL called yuck. The layout model is a little quirky, but if you’re comfortable with React you’ll probably feel at home writing UI in yuck[fn:2].
+You can even build status bars with it. Among the many bar implementations out there, I think Eww is one of the most flexible.
+
+Here’s what I came up with:
+
+#+begin_export html
+<section class="image">
+  <div>
+    <a data-flickr-embed="true" href="https://www.flickr.com/photos/typester/54816919324/in/datetaken-public/" title="Eww status-bar with RiverQL"><img src="https://live.staticflickr.com/65535/54816919324_fb7e775e79_b.jpg" width="1024" height="683" alt="Eww status-bar with RiverQL"/></a><script async src="//embedr.flickr.com/assets/client-code.js" charset="utf-8"></script>
+  </div>
+</section>
+
+#+end_export
+
+There are two ways to connect Eww with riverql:
+
+** 1. Polling with =defpoll=
+
+This repeatedly executes the specified command at a given interval:
+
+#+begin_src yuck
+  (defpoll river-outputs
+           :interval "1s"
+           :initial "{}"
+           `riverql 'query { outputs { name } }'`)
+#+end_src
+
+Use this when you want to run GraphQL queries.
+
+** 2. Real-time updates with =deflisten=
+
+This updates a variable whenever the specified command produces output:
+
+#+begin_src yuck
+  (deflisten river-focused-view :initial "{}"
+             "riverql 'subscription { events { ... on SeatFocusedView { title }}}'")
+#+end_src
+
+Use this when you want GraphQL subscriptions.
+
+I’ve included code in the repository’s examples, but due to yuck’s limitations, even with the =tagList= feature I still had to combine riverql with jq to build the UI I wanted[fn:3].
+
+* Conclusion
+
+Originally I made this just for fun, but after actually using it I found it surprisingly useful.
+Perhaps it’s because I’m already comfortable with GraphQL, but some clear advantages are:
+
+- A unified interface to retrieve information
+- Ability to select only the fields you need
+- Full visibility of the API by inspecting the schema
+
+Wouldn’t it be interesting if not just River, but all sorts of things could be accessed via GraphQL?
+Maybe I’ll start by making a *SysQL* for system information.
+
+* Footnotes
+[fn:3] One could argue that it’s better to shape riverql’s responses to match Eww’s needs, but…
+
+[fn:2] Tip for React engineers: In yuck’s =box= widget (used for layout), =:space-evenly= defaults to =true=.
+If you try to lay things out as if it were a flexbox, you’ll probably get tripped up by this!
+
+[fn:1] Intended usage is to run =riverql --server &= in your river init script.

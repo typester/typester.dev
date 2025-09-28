@@ -4,6 +4,6 @@
 #+TAGS:
 #+EID: 52ae59ab-aab5-4b0e-b120-af3ed3a4a568
 
-I am currently actively looking for job opportunities in the US. If you come across any openings that might suit me, please contact me at the information below! Thank you!
+I am currently actively looking for job opportunities in the US, especially roles in Rust/TypeScript backend or full-stack development. If you come across any openings that might suit me, please contact me at the information below! Thank you!
 
 *[[mailto:typester@gmail.com][typester@gmail.com]]*
