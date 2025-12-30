@@ -80,9 +80,9 @@ fn nav(nav: Nav) -> Markup {
                 (nav_item(nav == Nav::Blog, html! {
                     a href="/blog" { "Blog" }
                 }))
-                (nav_item(nav == Nav::CV, html! {
-                    a href="/cv.html" { "CV" }
-                }))
+//                (nav_item(nav == Nav::CV, html! {
+//                    a href="/cv.html" { "CV" }
+//                }))
             }
         }
     }
