@@ -1,0 +1,108 @@
+#+TITLE: Tab based workspace management with AeroSpace
+#+DATE: <2026-01-11 Sun 12:16>
+#+TZ: -0800 (PST)
+#+TAGS: aerospace aerotag macos
+#+EID: 1654f297-04d5-496f-8955-453647b8a887
+#+IMAGE: https://live.staticflickr.com/65535/55034823133_f4b2f5ca97_h.jpg
+
+As a long-time [[https://awesomewm.org/][AwesomeWM]] user who has loved using [[https://isaacfreund.com/software/river/][River]] in recent years, working on macOS was painful for me.
+
+The other day, my company issued me a new Mac, so I asked an LLM if I could build an environment like Awesome or River on a Mac. The answer was: "You can do it by combining AeroSpace, AeroRaise, and JankyBorders!"
+
+* AeroSpace is great but not perfect for me
+
+I've tried various tiling window managers for macOS, but never [[https://github.com/nikitabobko/AeroSpace][AeroSpace]]. My first impression was good. It's independent of the system's desktop management and lacks unnecessary window animations.
+
+However, the fact that its workspace management is completely different from Awesome or River was quite difficult for me. But since I was satisfied with the other aspects, I started thinking that if I could just solve this one issue, I might be able to live comfortably on a Mac.
+
+* The Invention of AeroTag
+
+Since AeroSpace allows retrieving the current state and manipulating it via the command line, I thought I could extend the workspace management with an external tool.[fn:1]
+And this is what I built:
+
+#+begin_quote
+[[https://github.com/typester/aerotag/][typester/aerotag: Tag-based workspace management for AeroSpace.]]
+#+end_quote
+
+By using this software alongside AeroSpace, you can achieve Awesome-like tag-based workspace management on AeroSpace.
+
+The specific usage is detailed in the [[https://github.com/typester/aerotag/][README]], but basically, instead of writing workspace operations like this:
+
+#+begin_src conf-toml
+alt-1 = 'workspace 1'
+#+end_src
+
+You simply use the ~aerotag~ command like this:
+
+#+begin_src conf-toml
+alt-1 = 'exec-and-forget aerotag tag-view 1'
+#+end_src
+
+I aligned the basic commands with Awesome's commands, and for advanced users, I also provided a River-like bitmask API. Using this, users can create commands not originally provided, such as "remove the focused window from the focused tag".
+
+I also prepared a command to stream workspace status in real-time. With this, you can render AeroTag's status on a menu bar like SketchyBar. (Since I don't use SketchyBar myself, support for it is provided on a best-effort basis.)
+
+* What is Tag-based Workspace Management?
+
+Very few WMs adopt this method—as far as I know, only dwm, awesome, and river—so few readers are likely familiar with it.
+
+Tag-based workspaces differ from normal workspaces in that you can *display multiple workspaces at once*. Also, a window can belong to multiple workspaces.
+From a programmer's perspective, both the displayed workspaces and the workspaces a window belongs to are defined by bitmasks.
+
+Let me explain why this is useful using my daily WM usage as an example.
+
+My most basic workspace (tag) configuration looks like this:
+
+- 1. Ghostty
+- 2. Firefox
+- 3. Emacs
+- ...
+- 10. Teams
+
+I use 10 tags like this, basically placing one application per tag.
+I also usually place dev tools to the left, communication tools on the far right, and other software to the right.
+
+Now, a common situation is wanting to reference documents or tickets in Firefox while writing code in Emacs, or wanting to do something else while watching logs in a terminal. There is a demand to combine applications across workspaces. This is very easy with a WM that has tag-based workspace management.
+
+If you are using Emacs (Tag 3 is displayed) and want to reference Firefox, you just need to toggle the display of Tag 2 in addition to Tag 3. Just like that, Tag 2 and Tag 3 are displayed simultaneously, showing the two apps side-by-side (the image below shows Terminal and Emacs, so Tag 1 and Tag 3 are displayed).
+
+#+begin_export html
+<section class="image">
+  <div>
+    <a data-flickr-embed="true" href="https://www.flickr.com/photos/typester/55034823133/in/datetaken/" title="AeroSpace + AeroTag"><img src="https://live.staticflickr.com/65535/55034823133_f4b2f5ca97_h.jpg" width="1600" height="1039" alt="AeroSpace + AeroTag"/></a><script async src="//embedr.flickr.com/assets/client-code.js" charset="utf-8"></script>
+  </div>
+</section>
+#+end_export
+
+Another common situation is when I have two Firefox windows on Tag 2, but I want to use only one of them with Emacs. In this case, if I use the previous method (displaying Tag 2 and Tag 3 together), both Firefox windows would appear, resulting in a total of 3 windows. That is not ideal, so in this case, I make the Firefox window I want to share belong to Tag 3 as well. This is similar to traditional workspace management, but the difference is that Firefox remains on Tag 2, so it is still available when I open Tag 2.
+
+In use cases like this, tag-based workspace management is extremely flexible. Once you get used to this mechanism, it becomes painful to be without it, and you will fall into the same situation I am in.
+
+However, currently we have Awesome for X Window System, River for Wayland, and now the same mechanism is available on macOS, so the options are aligning (though as mentioned later, Aerotag still has some issues).
+
+I started with Awesome, so I continue to use the keybindings I used in Awesome for both River and AeroTag. This means that once you learn how to use one tag-based WM, transitioning to another is very easy.
+
+* Current Limitations
+
+Of course, since I am forcing this workspace management on top of the system, issues remain.
+
+** Layout Reset Issue
+
+When combining various apps by toggling tags, the layout generally gets reset.
+In my case, I mostly use 2 screens (panes), or at most 3 screens[fn:2], so it is not a problem. However, I think it is not practically usable for people who open a massive amount of windows.
+
+** Screen Flicker
+
+I feel the operations via AeroTag are reasonably responsive and natural. However, for example, when activating another app using the ~open~ command from the terminal, or switching apps from the Dock, the underlying AeroSpace workspace appears briefly before moving to the AeroTag-managed workspace. As a result, the screen flickers for a moment.
+This is unavoidable due to the current specifications, so we just have to give up on it for now.
+
+* Conclusion
+
+Despite various issues and quirks, I am personally very satisfied with this environment. Restricted to my specific use case, I can now have almost the same experience on macOS as developing on Linux, which makes me incredibly happy. I am even starting to think I could make the Mac my main environment.
+
+If you are interested, please give it a try. I would be happy to hear your feedback.
+
+* Footnotes
+[fn:2] I have implemented a script that automatically splits the 2nd and 3rd windows vertically when there are 3 windows.
+
+[fn:1] Actually, I had the same experience with Hyprland in the past and created a tool called [[https://github.com/typester/hyprtag/][hyprtag]]. At that time, I was exploring WMs for the Wayland environment. I didn't continue development seriously because of issues like window order not being maintained, and because I found a good migration destination in River.
