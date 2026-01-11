@@ -72,20 +72,20 @@ pub fn render(
 
 fn nav(nav: Nav) -> Markup {
     html! {
-        nav #main-nav {
-            ul {
-                (nav_item(nav == Nav::Home, html! {
-                    a href="/" { "Home" }
-                }))
-                (nav_item(nav == Nav::Blog, html! {
-                    a href="/blog" { "Blog" }
-                }))
-//                (nav_item(nav == Nav::CV, html! {
-//                    a href="/cv.html" { "CV" }
-//                }))
+            nav #main-nav {
+                ul {
+                    (nav_item(nav == Nav::Home, html! {
+                        a href="/" { "Home" }
+                    }))
+                    (nav_item(nav == Nav::Blog, html! {
+                        a href="/blog" { "Blog" }
+                    }))
+    //                (nav_item(nav == Nav::CV, html! {
+    //                    a href="/cv.html" { "CV" }
+    //                }))
+                }
             }
         }
-    }
 }
 
 fn nav_item(selected: bool, content: Markup) -> Markup {
