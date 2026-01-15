@@ -1,0 +1,284 @@
+#+TITLE: Cute menu-bar pomodoro timer integrated with org-mode
+#+DATE: <2026-01-14 Wed 20:11>
+#+TZ: -0800 (PST)
+#+TAGS: macos emacs
+#+EID: 6e3866ea-b80c-43af-a02c-0f3f96b7b12a
+#+IMAGE: https://live.staticflickr.com/65535/55042445645_67996edb20_o.png
+
+I continue to improve my working environment on the Mac. Today, I built a simple system that displays a timer in the menu bar synchronized with my time tracking in [[https://orgmode.org/][org-mode]].
+
+#+begin_export html
+<section class="image">
+  <div>
+    <a data-flickr-embed="true" href="https://www.flickr.com/photos/typester/55042445645/in/datetaken/" title="Cute menu-bar timer integrated with org-mode (Emacs)"><img src="https://live.staticflickr.com/65535/55042445645_67996edb20_o.png" width="546" height="82" alt="Cute menu-bar timer integrated with org-mode (Emacs)"/></a><script async src="//embedr.flickr.com/assets/client-code.js" charset="utf-8"></script>
+  </div>
+</section>
+#+end_export
+
+I am an avid user of org-mode (I'm writing this blog post in org as well[fn:1]), so naturally, I manage my tasks with org-mode.
+On the other hand, to maintain focus for long periods, I also use a Pomodoro timer. I felt that there were many lovely Pomodoro apps available for Mac, so I was looking forward to trying them out.
+
+However, once I started using them, the double operation of starting the timer and then "clocking in" to the actual task in Emacs became a pain. I started to think that managing the Pomodoro timer in an external app wasn't realistic.
+
+That said, I really fell in love with the cute design of the menu bar timer in an app called [[https://www.flow.app/][Flow]] that I tried at the time, and I began wondering if I could somehow link them together.
+
+When I consulted Gemini, it suggested that I could either write a native app myself or use [[https://github.com/swiftbar/SwiftBar][SwiftBar]]. The fact that "writing a native app yourself" and "using an app like SwiftBar" are presented as equal options really feels like the era of "vibe coding."
+
+SwiftBar is an open-source macOS utility that allows you to create custom menu bar items using scripts (Bash, Python, Ruby, Swift, etc.). It essentially takes the STDOUT of a script and renders it in the menu bar, making it incredibly easy to display information or create simple interactive tools without full app development.
+
+SwiftBar seemed easier, but the question was whether I could reproduce that specific design. So, I decided to try SwiftBar first, and if I couldn't replicate the design, I would build a native app.
+
+* Displaying images with SwiftBar
+SwiftBar plugins work by outputting what you want to display to STDOUT, so they are primarily for text. However, it seems possible to display images by outputting them as base64 strings.
+
+I initially tried to do this with Python, but I couldn't get the image to look crisp. When I consulted Gemini again, it said, "You should write it in Swift," and provided me with some Swift code. It looked like the Swift version could get very close to the desired look with some tweaking, so I based my final version on that. Here is the result:
+
+#+begin_src swift
+#!/usr/bin/env swift
+
+import Foundation
+import Cocoa
+import CoreGraphics
+
+// --- Configuration ---
+let workTimerFile = "/tmp/my_pomodoro_timer"
+let breakTimerFile = "/tmp/my_break_timer"
+
+let workDuration: Double = 25.0
+let breakDuration: Double = 5.0
+
+let emacsClient = "/opt/homebrew/bin/emacsclient"
+let soundFile = "/System/Library/Sounds/Glass.aiff"
+
+// --- Visual Settings ---
+let logicalWidth: CGFloat = 44
+let logicalHeight: CGFloat = 16
+let scale: CGFloat = 1.0
+
+let colorWork = NSColor.white
+let colorBreak = NSColor(srgbRed: 0.4, green: 0.85, blue: 0.65, alpha: 1.0)
+
+// --- Helpers ---
+func runShell(_ command: String, wait: Bool = true) {
+    let task = Process()
+    // Discard output
+    task.standardOutput = FileHandle.nullDevice
+    task.standardError = FileHandle.nullDevice
+    task.launchPath = "/bin/bash"
+    task.arguments = ["-c", command]
+    task.launch()
+
+    if wait {
+        task.waitUntilExit()
+    }
+}
+
+func readFile(_ path: String) -> Double? {
+    guard let content = try? String(contentsOfFile: path),
+          let timestamp = Double(content.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+        return nil
+    }
+    return timestamp
+}
+
+func writeFile(_ path: String, timestamp: Double) {
+    try? "\(timestamp)".write(toFile: path, atomically: true, encoding: .utf8)
+}
+
+func deleteFile(_ path: String) {
+    try? FileManager.default.removeItem(atPath: path)
+}
+
+// --- CLI Command Handling ---
+let args = CommandLine.arguments
+if args.count > 1 {
+    let command = args[1]
+
+    if command == "stop_work" {
+        runShell("\(emacsClient) -n --eval '(org-clock-out)'")
+        // Note: Emacs removes the file, but we can do it here too just in case
+        deleteFile(workTimerFile)
+    } else if command == "stop_break" {
+        deleteFile(breakTimerFile)
+    }
+    exit(0)
+}
+
+// --- Timer Logic ---
+enum TimerState {
+    case work(String)
+    case breakTime(String)
+    case idle
+}
+
+func getCurrentState() -> TimerState {
+    let now = Date().timeIntervalSince1970
+
+    // 1. Work Timer (Managed by Emacs)
+    if let workEnd = readFile(workTimerFile) {
+
+        // Cancel break if work starts
+        if FileManager.default.fileExists(atPath: breakTimerFile) {
+            deleteFile(breakTimerFile)
+        }
+
+        let remaining = workEnd - now
+        if remaining > 0 {
+            let m = Int(remaining) / 60
+            let s = Int(remaining) % 60
+            return .work(String(format: "%02d:%02d", m, s))
+        } else {
+            // --- Work finished ---
+
+            // 1. CRITICAL: Delete file FIRST to prevent race conditions (loops)
+            deleteFile(workTimerFile)
+
+            // 2. Create Break Timer immediately
+            let breakEnd = now + (breakDuration * 60)
+            writeFile(breakTimerFile, timestamp: breakEnd)
+
+            // 3. Run commands in background (async) so UI doesn't freeze
+            //    Using '&' in shell to detach
+            runShell("afplay \(soundFile) &", wait: false)
+            runShell("\(emacsClient) -n --eval '(org-clock-out)' &", wait: false)
+
+            return .breakTime(String(format: "%.0f:00", breakDuration))
+        }
+    }
+
+    // 2. Break Timer (Managed by Swift)
+    if let breakEnd = readFile(breakTimerFile) {
+        let remaining = breakEnd - now
+        if remaining > 0 {
+            let m = Int(remaining) / 60
+            let s = Int(remaining) % 60
+            return .breakTime(String(format: "%02d:%02d", m, s))
+        } else {
+            // --- Break finished ---
+            deleteFile(breakTimerFile)
+            runShell("afplay \(soundFile) &", wait: false)
+            return .idle
+        }
+    }
+
+    return .idle
+}
+
+// --- Rendering ---
+func createBase64Image(text: String, color: NSColor) -> String {
+    let width = logicalWidth * scale
+    let height = logicalHeight * scale
+    let cornerRadius = 5.5 * scale
+    let borderWidth = 0.8 * scale
+    let fontSize = 10.5 * scale
+
+    let size = NSSize(width: width, height: height)
+    let img = NSImage(size: size)
+
+    img.lockFocus()
+    guard let ctx = NSGraphicsContext.current?.cgContext else { return "" }
+
+    // Draw Border
+    let inset = borderWidth / 2
+    let rect = NSRect(x: inset, y: inset, width: width - (inset * 2), height: height - (inset * 2))
+    let path = NSBezierPath(roundedRect: rect, xRadius: cornerRadius, yRadius: cornerRadius)
+    path.lineWidth = borderWidth
+    color.setStroke()
+    path.stroke()
+
+    // Draw Text
+    let font = NSFont.monospacedDigitSystemFont(ofSize: fontSize, weight: .light)
+    let paragraphStyle = NSMutableParagraphStyle()
+    paragraphStyle.alignment = .center
+
+    let attrs: [NSAttributedString.Key: Any] = [
+        .font: font,
+        .foregroundColor: color,
+        .paragraphStyle: paragraphStyle
+    ]
+
+    let str = text as NSString
+    let strSize = str.size(withAttributes: attrs)
+    let yPos = (height - strSize.height) / 2
+    let strRect = NSRect(x: 0, y: yPos, width: width, height: strSize.height)
+
+    str.draw(in: strRect, withAttributes: attrs)
+
+    img.unlockFocus()
+
+    guard let tiff = img.tiffRepresentation,
+          let bitmap = NSBitmapImageRep(data: tiff),
+          let png = bitmap.representation(using: .png, properties: [:]) else { return "" }
+
+    return png.base64EncodedString()
+}
+
+// --- Main ---
+let state = getCurrentState()
+let scriptPath = CommandLine.arguments[0]
+
+switch state {
+case .work(let timeStr):
+    let img = createBase64Image(text: timeStr, color: colorWork)
+    print(" | image=\(img) bash='\(scriptPath)' param1=stop_work terminal=false refresh=true")
+    print("---")
+    print("Clock Out | bash='\(scriptPath)' param1=stop_work terminal=false refresh=true")
+
+case .breakTime(let timeStr):
+    let img = createBase64Image(text: timeStr, color: colorBreak)
+    print(" | image=\(img) bash='\(scriptPath)' param1=stop_break terminal=false refresh=true")
+    print("---")
+    print("Stop Break | bash='\(scriptPath)' param1=stop_break terminal=false refresh=true")
+
+case .idle:
+    let img = createBase64Image(text: String(format: "%.0f:00", workDuration), color: colorWork)
+    print(" | image=\(img)")
+    print("---")
+    print("Start from Emacs (org-clock-in)")
+}
+
+#+end_src
+
+This works if you place it in the SwiftBar plugin directory as a file like =pomodoro.1s.swift=.
+
+By the way, I haven't thoroughly investigated how SwiftBar works, but leaving it as is might mean that the Swift compiler runs once every second. So, it's probably better to compile it and place the binary there instead, like this:
+
+#+begin_src shell
+swiftc -O pomodoro.1s.swift -o pomodoro.1s.bin
+#+end_src
+
+* Integrating with Emacs
+
+The SwiftBar plugin above monitors =/tmp/my_pomodoro_timer= and operates the timer based on that file. So, all we need to do is create that file from Emacs.
+
+I configured it as follows:
+
+#+begin_src emacs-lisp
+;; pomodoro
+(with-eval-after-load 'org
+  (defvar my/pomodoro-timer-file "/tmp/my_pomodoro_timer")
+  (defvar my/pomodoro-duration 25)
+
+  (defun my/pomodoro-start-timer ()
+    (let* ((end-time (time-add (current-time) (seconds-to-time (* my/pomodoro-duration 60))))
+           (end-time-float (float-time end-time)))
+      (with-temp-file my/pomodoro-timer-file
+        (insert (format "%.0f" end-time-float)))))
+
+  (defun my/pomodoro-stop-timer ()
+    (when (file-exists-p my/pomodoro-timer-file)
+      (delete-file my/pomodoro-timer-file)))
+
+  (add-hook 'org-clock-in-hook 'my/pomodoro-start-timer)
+  (add-hook 'org-clock-out-hook 'my/pomodoro-stop-timer))
+#+end_src
+
+With this, I've completed a system where the timer starts automatically when I clock in.
+
+Also, stopping the timer (clock-out) can be done from the menu bar app, and when time runs out, it rings a bell and simultaneously clocks out in Emacs. It's very convenient.
+
+The design isn't exactly the same as Flow, but it's quite close, and I'm satisfied.
+
+* Footnotes
+
+[fn:1] Source code for this site is here: https://github.com/typester/typester.dev
