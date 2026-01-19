@@ -1,0 +1,68 @@
+#+TITLE: Introducing Yashiki: A macOS window manager with the river/awesome philosophy
+#+DATE: <2026-01-18 Sun 19:56>
+#+TZ: -0800 (PST)
+#+TAGS: macos river awesome yashiki
+#+EID: 6d6c6d06-360d-46fd-b5a7-e991e6594837
+
+In my [[https://typester.dev/blog/2026/01/11/tag-based-workspace-management-with-aerospace][previous entry]], I wrote about extending AeroSpace, but as development progressed, I quickly hit a wall. Specifically, I ran into the limitation that AeroSpace doesn't expose layout information. I reached the conclusion that no matter how hard I tried, I couldn't completely build what I wanted with that approach.
+
+But I thought I had no other choice. Honestly, I figured writing a Window Manager from scratch was impossible for a weekend developer.
+However, my fate was sealed when I started coding with a coding agent just for a bit of fun while having a drink this weekend.
+
+Surprisingly, 6 hours later, I had something reasonably working. That made it incredibly fun, so I continued developing through the weekend. It has now reached a level where it's not just "minimum viable," but a decently fully-featured window manager. Here it is:
+
+#+begin_quote
+[[https://github.com/typester/yashiki][typester/yashiki: macOS tiling window manager]]
+#+end_quote
+
+* A macOS Window Manager with the Awesome/River philosophy
+
+Yashiki (that's the name of the WM I'm building) is, honestly, a hardcore WM. It has no mouse operations. It probably won't resonate with most people using macOS.
+
+However, if you are a former Linux user familiar with WMs like awesome or river, this WM is for you.
+River users, in particular, will feel a kinship. The command system, configuration method, and the decision to keep the layout engine external via plugins are all influenced by river.
+
+I am a long-time Awesome user and a die-hard Linux user who has loved River in recent years. For unavoidable reasons, I have to use macOS, so I am writing this software to make this environment as close as possible to the one I'm used to. There might not be many, but surely there are others like me. I hope this helps them.
+
+Conversely, I also recommend this to people interested in Linux desktops.
+
+If you can use Yashiki, you will definitely be able to use river without any awkwardness immediately. In other words, you can get a feel for the Linux desktop while using macOS.
+
+
+* Where to start
+
+I worked reasonably hard on a [[https://github.com/typester/yashiki/blob/main/docs/quick-start.md][Quick Start document]], so please refer to that first.
+
+For the concept of "Tags," [[https://codeberg.org/river/wiki-classic/src/branch/main/pages/How-tags-work.md][the river documentation]] is also helpful, so take a look.
+
+
+* I want to collect Workarounds
+
+Unfortunately, macOS WMs cannot avoid workarounds for apps that behave strangely.
+
+For example, Firefox generates mysterious windows (popup menus or something), which causes terrible flickering if used normally.
+The current workaround for that is adding the following settings:
+
+#+begin_src shell
+yashiki rule-add --app-id org.mozilla.firefox --subrole AXUnknown ignore
+yashiki rule-add --app-id org.mozilla.firefox --title "" float
+#+end_src
+
+To allow creating many such workarounds, the rule settings are insanely robust.[fn:1]
+If there are any adventurous souls using this WM, please teach me the workarounds you've configured via issues or pull requests. Based on that, I want to flesh out a workaround page.
+
+
+* Future Prospects
+
+Actually, I use tiling window managers very simply, so it's no exaggeration to say that almost all the functions I need are already implemented.
+However, since I designed the layout to be freely extensible, I also want to try making various other layouts.
+
+If you have any requests, please head to the issues.
+
+Also, the layout engine is open for anyone to create, so if you are interested, check out [[https://github.com/typester/yashiki/blob/main/docs/layout-engine.md][the docs]].
+
+See ya.
+
+* Footnotes
+
+[fn:1] I mean, river users, seeing this syntax makes you feel right at home, doesn't it? 😎
