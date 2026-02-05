@@ -1,0 +1,43 @@
+#+TITLE: App Launcher Comparison for Yashiki Users
+#+DATE: <2026-02-05 Thu 12:27>
+#+TZ: -0800 (PST)
+#+TAGS: macos launcher yashiki
+#+EID: e4b417c6-5f13-49c8-8be9-d1022a1019ec
+
+It is fair to say that an application launcher is essential software for tiling window manager users.
+For those who perform GUI operations via keyboard, it is only natural to launch applications using just the keyboard as well.
+
+I hadn't used macOS for a while, so I wasn't familiar with the recent launcher landscape. It seems that an app called [[https://www.raycast.com/][Raycast]] is popular these days. However, after trying it out, I felt that it didn't play well with [[https://github.com/typester/yashiki][Yashiki]] (especially in a multi-monitor environment).
+
+* Whether the launcher appears on the monitor with the mouse cursor
+
+In a use case where Yashiki is used in a multi-monitor environment, I often do the following:
+
+1. Move the cursor to another monitor using =output-focus next= (requires cursor-warp configuration).
+2. Launch an app from the launcher on that monitor.
+
+Raycast seems to be incompatible with this use case. If there is a window on that monitor and it has focus, the launcher will appear on that monitor. However, if there are no windows, the launcher seems to appear on the screen containing the focused window ([fn:1]), regardless of the mouse cursor's position.
+
+I looked for a configuration setting for this, but I couldn't find anything relevant.
+
+* What about other launchers?
+
+** Alfred
+
+When I used macOS in the past, I loved using [[https://www.alfredapp.com/][Alfred]], so I tried it out as well.
+
+Alfred has a setting called =Show Alfred on=. By selecting =mouse screen= there, you can display the launcher on the monitor where the mouse cursor is located.
+
+** Spotlight
+
+Actually, Spotlight handles this best among them; by default, it displays the search window on the monitor with the mouse cursor. While it is less feature-rich compared to other launchers, Spotlight might be sufficient for many cases.
+
+Since I personally only use it to launch applications, I am currently using Spotlight as my main launcher. When I used Alfred in the past, I used it to launch apps or activate them using shortcut keys, but since Yashiki supports that functionality, I don't need it anymore.
+
+* Conclusion
+
+Spotlight if you only need simple functionality; Alfred if you need versatility.
+
+* Footnotes
+
+[fn:1] I haven't verified this rigorously, so the actual behavior might differ from the specification.
