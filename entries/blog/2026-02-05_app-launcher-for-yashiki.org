@@ -32,12 +32,13 @@ Alfred has a setting called =Show Alfred on=. By selecting =mouse screen= there,
 
 Actually, Spotlight handles this best among them; by default, it displays the search window on the monitor with the mouse cursor. While it is less feature-rich compared to other launchers, Spotlight might be sufficient for many cases.
 
-Since I personally only use it to launch applications, I am currently using Spotlight as my main launcher. When I used Alfred in the past, I used it to launch apps or activate them using shortcut keys, but since Yashiki supports that functionality, I don't need it anymore.
+Since I personally only use it to launch applications, I am currently using Spotlight as my main launcher. When I used Alfred in the past, I used it to launch apps or activate them using shortcut keys, but since Yashiki supports that functionality[fn:2], I don't need it anymore.
 
 * Conclusion
 
 Spotlight if you only need simple functionality; Alfred if you need versatility.
 
 * Footnotes
+[fn:2] =exec-or-focus= command
 
 [fn:1] I haven't verified this rigorously, so the actual behavior might differ from the specification.
