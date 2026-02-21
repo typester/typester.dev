@@ -1,0 +1,54 @@
+#+TITLE: How peeking at screens shaped my Emacs
+#+DATE: <2026-02-21 Sat 09:17>
+#+TZ: -0800 (PST)
+#+TAGS: emacs hacker
+#+EID: 83dc4d11-7045-4ed4-8eaa-1f1915244640
+
+My friend mash wrote an interesting article titled "[[https://maaash.jp/2026/02/more-a-tags-in-the-terminal/][more <a> tags in the terminal]]".[fn:1]
+
+The main topic of the article, [[https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda][OSC8]], is of course fascinating, but it made me think about what he wrote at the beginning: the influence we get from peeking at someone else's screen.
+
+
+* 2004: Using Emacs without any customization
+
+I think it was around 2004 when I first started using Emacs. The reason was simple: it was the standard editor at the company I had just joined. I was probably the 4th engineer there, and two out of three of my senior colleagues used Emacs.
+
+Back then, I used Emacs in its completely default state. Looking back, I think my seniors were also using vanilla Emacs. The idea of "hacking an editor to my liking" simply didn't exist in my mind yet.
+
+
+
+* The day I was glued to miyagawa's screen
+
+I still remember the shocking event that completely changed my view of Emacs. It was my encounter with [[https://miyagawa.co/][miyagawa]], who was already known as a world-class hacker in the Perl community.
+
+At the time, I was contributing to a project he was developing called "[[https://metacpan.org/pod/Plagger][Plagger]]". Whether it was a YAPC hackathon or a Plagger-specific one, the details are a bit fuzzy, but I had the fortune of working right next to him at the event.
+
+In that moment, I couldn't take my eyes off his Emacs screen.
+
+With unrecognizable operations I had never seen before, buffers switched instantly, and code was rewritten at incredible speed. It was a completely different beast from the vanilla Emacs I knew. I still clearly remember completely ignoring Plagger—our actual purpose for being there—and just bombarding him with Emacs questions instead lol.
+
+
+
+* The propagation of technology and hacker spirit
+
+Triggered by this event, I fell deep into the rabbit hole of Emacs customization. I learned the joy of tweaking various settings and nurturing it into a tool that perfectly fit my hands. I consider myself to be quite particular about the software tools I use daily, not just Emacs[fn:2], and it's safe to say that the origin of this mindset was miyagawa.
+
+Later on, I met mash, who wrote the article at the beginning of this post. Realizing that he had picked up something from me, just as I had been influenced by miyagawa, made me think again about how fascinating it is that technology and the hacker spirit propagate from person to person.
+
+By the way, my Emacs customization journey has had many other encounters. After mash, a pure-blooded Emacs hacker named [[https://github.com/imakado][imakado]] joined as a colleague, and he wrote countless useful elisp for me. More recently, I've been hugely influenced by the posts and projects from [[https://github.com/xenodium][@xenodium]], and a new wave of customization is crashing over me right now.
+
+
+
+* Conclusion
+
+Reading mash's article, I realized just how much I've been influenced by so many hackers, and how my current self has been shaped by piecing together their settings and philosophies.
+
+With the spread of social media today, the ease of this propagation has grown to a level incomparable to back then. However, I still think it's difficult to get the same level of shock from the internet as you do from directly peeking at someone else's screen.
+
+Recently, having moved to Portland, I'm facing the issue of having very few local friends who use Emacs. The only Emacs user I know here is [[https://www.red-bean.com/~jimb/][Jim]], the author of /Programming Rust/. I wonder if there is an Emacs community or meetup in PDX?
+
+
+* Footnotes
+[fn:2] I mean, I even [[https://github.com/typester/yashiki][built my own Window Manager]] lol.
+
+[fn:1] I thought it was weird that I didn't notice the article even though I have him in my feed reader. Turns out he recently renewed his blog. A 301 redirect for RSS is a mandatory manner since the Showa era!
