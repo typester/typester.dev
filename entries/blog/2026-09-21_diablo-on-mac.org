@@ -3,6 +3,7 @@
 #+TZ: -0700 (PDT)
 #+TAGS: wine macos game diablo
 #+EID: 4a7512c3-bf9b-4309-8b3e-04d3ff67d6ce
+#+IMAGE: https://live.staticflickr.com/65535/55542990695_71886a902d_h.jpg
 
 A friend recently told me about a newly released piece of software that lets you play Windows games on a Mac.[fn:1]
 It's apparently free to use, but with no source code or developer information available, the site looks incredibly sketchy. However, another brave friend actually tried it out and reported that they were able to play Diablo IV quite comfortably.
