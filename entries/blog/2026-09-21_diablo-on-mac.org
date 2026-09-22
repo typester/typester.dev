@@ -1,0 +1,43 @@
+#+TITLE: Play Diablo IV on Mac
+#+DATE: <2026-09-21 Mon 19:56>
+#+TZ: -0700 (PDT)
+#+TAGS: wine macos game diablo
+#+EID: 4a7512c3-bf9b-4309-8b3e-04d3ff67d6ce
+
+A friend recently told me about a newly released piece of software that lets you play Windows games on a Mac.[fn:1]
+It's apparently free to use, but with no source code or developer information available, the site looks incredibly sketchy. However, another brave friend actually tried it out and reported that they were able to play Diablo IV quite comfortably.
+
+I thought to myself, rather than risking it with such suspicious software, couldn't I just build it myself in this era of AI?
+
+And so, here is what I ended up making:
+
+#+begin_quote
+[[https://github.com/typester/sake][typester/sake: Run Windows games on an Apple silicon Mac]]
+#+end_quote
+
+It's amazing how convenient things have become. Here is a screenshot of Diablo IV actually running on this tool:
+
+#+begin_export html
+<section class="image">
+  <div>
+    <a data-flickr-embed="true" href="https://www.flickr.com/photos/typester/55542990695/in/datetaken/" title="Diablo IV on Mac"><img src="https://live.staticflickr.com/65535/55542990695_71886a902d_h.jpg" width="1600" height="1039" alt="Diablo IV on Mac"/></a><script async src="//embedr.flickr.com/assets/client-code.js" charset="utf-8"></script>
+  </div>
+</section>
+#+end_export
+
+If you look at the image, you can tell that it is being rendered with Metal.[fn:2]
+
+My current setup is an M5 MacBook Pro, and in this environment, Diablo IV easily maintains a constant 60 fps (usually hovering around 70 to 90) on the lowest graphics settings. It is perfectly comfortable to play.
+
+I've put together a detailed installation method for Diablo IV in the [[https://github.com/typester/sake/blob/main/docs/getting-started.md][Getting started guide]], so please check it out if you're interested.
+
+Besides Diablo IV, I also tried a few smaller Steam games like Stardew Valley, and confirmed that they play smoothly as well.
+
+As for the implementation, it utilizes a combination of CrossOver's LGPL source code and Apple's Game Porting Toolkit. A huge thanks to the pioneers who made this possible.
+
+Diablo IV Season 15 just started, and it's shaping up to be quite a fun season, so everyone should definitely give it a try! By the way, my battle tag is =typester#1380=, so if you're up for farming together, feel free to send me a friend request.
+
+* Footnotes
+[fn:2] The Metal HUD display, which can be seen by setting the =MTL_HUD_ENABLED=1= environment variable. 
+
+[fn:1] I can't shake my personal suspicion that it might be spyware, so I am going to refrain from posting the link.
